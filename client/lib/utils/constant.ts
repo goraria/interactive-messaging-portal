@@ -39,7 +39,33 @@ import {
   Info,
   AppWindow,
 } from "@gorth/primitive/cores/lucide"
-import { apiAuthUrl } from "./environment"
+import { apiAuthUrl } from "@/lib/utils/environment"
+
+export const appGlobal = {
+  name: "Interactive Messaging Portal",
+  description: "Design by Japtor Gorthenburg",
+  title: "Gorth - Interactive Messaging Portal",
+  address: "208 Main St, Hai Bà Trưng, Hà Nội, Việt Nam",
+  times: "06:00 - 22:00 (Hằng ngày)",
+  opening: "06:00 - 22:00 (GMT+7) (Thứ Hai - Chủ Nhật)",
+  phone: "(+84) 123 456 789",
+  hotline: "(028) 1876 5439",
+  email: "info@gorth.org",
+  website: "www.gorth.org",
+  currency: "VND",
+  locales: "vi-VN",
+  zalo: "https://zalo.me/0123456789",
+  facebook: "https://www.facebook.com/gorth.org",
+  instagram: "https://www.instagram.com/gorth.org",
+  twitter: "https://www.twitter.com/gorth.org",
+  youtube: "https://www.youtube.com/gorth.org",
+  github: "https://www.github.com/gorth.org",
+  twitch: "https://www.twitch.tv/gorth.org",
+  copyright: "Copyright © &copy; 2020 - " + new Date().getFullYear() + " Gorth Inc. All rights reserved.",
+  pro: "Bản quyền © Gorth Inc. 2020 - " + (new Date().getFullYear()) + " Bảo lưu mọi quyền.",
+  copyleft: "Copyright © 2020 - " + new Date().getFullYear() + " Waddles Corp. Powered by Gorth Inc.",
+  noob: "Bản quyền © Waddles Corp. 2020 - " + new Date().getFullYear() + " Cung cấp bởi Gorth Inc.",
+}
 
 export const visitor = {
   name: "Visitor",
