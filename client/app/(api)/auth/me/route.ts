@@ -7,7 +7,7 @@ import {
   setAppSessionCookie,
   setAuthTokenCookies,
   verifySession,
-} from "@/lib/dal"
+} from "@/lib/auth/dal"
 import {
   getOAuthUserInfo,
   isAccessTokenExpired,

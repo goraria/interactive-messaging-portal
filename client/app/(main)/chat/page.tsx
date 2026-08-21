@@ -15,7 +15,9 @@ import { MessagesSquare, Send } from "@gorth/primitive/cores/lucide"
 import { useQueryClient } from "@gorth/primitive/cores/tanstack/query"
 import { ConversationItem } from "@/components/conversation/message/conversation-item"
 import { ConversationState } from "@/components/conversation/conversation-state"
-import { useAccount } from "@/hooks/use-user"
+import { useAuth } from "@/hooks/use-auth"
+import { useUser } from "@/hooks/use-user"
+import { visitor } from "@/lib/utils/constant"
 import {
   addConversationMember,
   chatQueryKeys,
@@ -28,7 +30,9 @@ import type { User } from "@/schemas/chat"
 export default function ChatPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { user, sidebarUser, auth } = useAccount()
+  const auth = useAuth()
+  const { user, loading: userLoading } = useUser()
+  const displayName = user?.name ?? visitor.name
   const [selectingUser, setSelectingUser] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -85,7 +89,7 @@ export default function ChatPage() {
     }
   }
 
-  if (auth.loading) {
+  if (auth.loading || userLoading) {
     return (
       <main className="flex h-full items-center justify-center">
         <ConversationState loading />
@@ -101,9 +105,7 @@ export default function ChatPage() {
             <MessagesSquare className="size-6" />
           </span>
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">
-              Hello, {sidebarUser.name}
-            </h1>
+            <h1 className="text-2xl font-semibold">Hello, {displayName}</h1>
             <p className="text-muted-foreground text-sm leading-6">
               Select a conversation from the sidebar or start a new message.
             </p>

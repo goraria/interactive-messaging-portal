@@ -3,7 +3,6 @@
 import { useQuery } from "@gorth/primitive/cores/tanstack/query"
 import { useAuth } from "@/hooks/use-auth"
 import { currentUserQueryKey, getCurrentUser } from "@/services/chat"
-import { getAccountDisplayName } from "@/lib/utils/formatter"
 
 export function useUser() {
   const auth = useAuth()
@@ -42,27 +41,5 @@ export function useUser() {
 }
 
 export function useAccount() {
-  const auth = useAuth()
-  const { user, loading: userLoading } = useUser()
-  const metadata = auth.account?.user_metadata ?? {}
-
-  return {
-    user,
-    sidebarUser: {
-      name: getAccountDisplayName(user?.name, auth.account?.email, metadata),
-      email: user?.email ?? auth.account?.email ?? "guest@gorth.com",
-      avatar:
-        user?.image ??
-        String(metadata.avatar_url ?? metadata.picture ?? "/logo/icon.png"),
-    },
-    auth: {
-      account: auth.account,
-      authenticated: auth.authenticated,
-      loading: auth.loading || userLoading,
-      error: auth.error,
-      logout: auth.logout,
-      login: auth.login,
-      register: auth.register,
-    },
-  }
+  return null
 }

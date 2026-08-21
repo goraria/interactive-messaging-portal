@@ -8,7 +8,7 @@ import {
   useQueryClient,
 } from "@gorth/primitive/cores/tanstack/query"
 import { currentUserQueryKey } from "@/services/chat"
-import { resolveInternalPath } from "@/lib/formatter"
+import { resolveInternalPath } from "@/lib/utils/formatter"
 import type { AuthMeResponse, AuthUser } from "@/lib/utils/interface"
 
 export const authQueryKey = ["auth", "me"] as const

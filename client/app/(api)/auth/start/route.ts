@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { routes, ssoOAuthClientId } from "@/lib/environment"
+import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
+import { resolveInternalPath } from "@/lib/utils/formatter"
 import {
   createAuthState,
   createOAuthCodeChallenge,
@@ -8,15 +9,14 @@ import {
   setAuthReturnToCookie,
   setAuthStateCookie,
   setOAuthVerifierCookie,
-} from "@/lib/dal"
-import { resolveInternalPath } from "@/lib/formatter"
+} from "@/lib/auth/dal"
 
 export async function GET(request: NextRequest) {
   const mode = request.nextUrl.searchParams.get("mode")
   const isSignUp = mode === "sign-up" || mode === "register"
   const returnTo = resolveInternalPath(
     request.nextUrl.searchParams.get("returnTo") ??
-      request.nextUrl.searchParams.get("redirect")
+    request.nextUrl.searchParams.get("redirect")
   )
   const state = createAuthState()
   const verifier = createOAuthCodeVerifier()

@@ -1,7 +1,7 @@
 "use client"
 
 import { QueryClient, useQuery } from "@gorth/primitive/cores/tanstack/query"
-import { apiBaseUrl } from "@/lib/environment"
+import { apiBaseUrl } from "@/lib/utils/environment"
 
 export interface LabResponse {
   authenticated?: boolean

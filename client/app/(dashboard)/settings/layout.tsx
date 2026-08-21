@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@gorth/primitive/custom/sidebar"
 import { Dashbar } from "@/layouts/dashbar"
 import { AppSidebar } from "@gorth/primitive/dashboard/app-sidebar"
-import { settingSidebar } from "@/lib/utils/constant"
+import { settingSidebar, visitor } from "@/lib/utils/constant"
 import { useAuth } from "@/hooks/use-auth"
+import { toNavigationUser } from "@/lib/utils/formatter"
 
 export default function MainLayout({
   children,
@@ -15,6 +16,12 @@ export default function MainLayout({
 }>) {
   const router = useRouter()
   const authControls = useAuth()
+  const sidebar = {
+    ...settingSidebar,
+    user: authControls.account
+      ? toNavigationUser(authControls.account)
+      : visitor,
+  }
 
   useEffect(() => {
     if (
@@ -41,7 +48,7 @@ export default function MainLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar data={settingSidebar} auth={authControls} />
+      <AppSidebar data={sidebar} auth={authControls} />
 
       <SidebarInset>
         <Dashbar />

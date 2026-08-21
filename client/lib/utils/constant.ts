@@ -1,9 +1,4 @@
 import {
-  GalleryVerticalEnd,
-  AudioWaveform,
-  Command,
-  BarChart3,
-  MessageSquare,
   Users,
   SquareUser,
   Home,
@@ -42,7 +37,15 @@ import {
   UserCircle,
   LucideIcon,
   Info,
+  AppWindow,
 } from "@gorth/primitive/cores/lucide"
+import { apiAuthUrl } from "./environment"
+
+export const visitor = {
+  name: "Visitor",
+  email: "visitor@gorth.org",
+  avatar: "",
+}
 
 export interface ChatConversation {
   id: string
@@ -182,11 +185,7 @@ export const chatConversations: ChatConversation[] = [
 ]
 
 export const messageSidebar = {
-  user: {
-    name: "Japtor",
-    email: "japtor@gorth.org",
-    avatar: "/avatar/waddles.jpeg",
-  },
+  user: visitor,
   brand: {
     name: "Gortheia",
     logo: "/logo/icon.png",
@@ -226,12 +225,12 @@ export const messageSidebar = {
   navDropdown: [
     {
       title: "Account",
-      url: "#",
+      url: `${apiAuthUrl}/settings`,
       icon: BadgeCheck,
     },
     {
       title: "Settings",
-      url: "/setting",
+      url: "/settings",
       icon: Bolt,
     },
   ],
@@ -251,11 +250,7 @@ export const messageSidebar = {
 }
 
 export const settingSidebar = {
-  user: {
-    name: "japtor",
-    email: "japtor@gorth.org",
-    avatar: "/avatar/waddles.jpeg",
-  },
+  user: visitor,
   route: "/",
   role: "main",
   brand: {
@@ -482,12 +477,12 @@ export const settingSidebar = {
   navDropdown: [
     {
       title: "Account",
-      url: "#",
+      url: `${apiAuthUrl}/settings`,
       icon: BadgeCheck,
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/settings",
       icon: Bolt,
     },
   ],
@@ -506,11 +501,7 @@ export const settingSidebar = {
 }
 
 export const infoSidebar = {
-  user: {
-    name: "japtor",
-    email: "japtor@gorth.org",
-    avatar: "/avatar/waddles.jpeg",
-  },
+  user: visitor,
   route: "/",
   role: "main",
   brand: {
@@ -650,6 +641,68 @@ export const infoSidebar = {
           isActive: true,
         },
       ],
+    },
+  ],
+}
+
+export const sharedNavbar = {
+  user: visitor,
+  navMain: [
+    {
+      title: "Administrator",
+      url: "/admin",
+      icon: BadgeCheck,
+      isActive: true,
+    },
+    {
+      title: "Users",
+      url: "/admin/users",
+      icon: Users,
+      isActive: true,
+    },
+    {
+      title: "Applications",
+      url: "/admin/apps",
+      icon: AppWindow,
+      isActive: true,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Bolt,
+      isActive: true,
+    },
+  ],
+  navSecondary: [
+    {
+      title: "Home",
+      url: "/",
+      icon: Home,
+      isActive: true,
+    },
+  ],
+  navDropdown: [
+    {
+      title: "Account",
+      url: `${apiAuthUrl}/settings`,
+      icon: BadgeCheck,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Bolt,
+    },
+  ],
+  navSignal: [
+    {
+      title: "Sign In",
+      url: "/auth/sign-in",
+      icon: LogIn,
+    },
+    {
+      title: "Sign Up",
+      url: "/auth/sign-up",
+      icon: KeySquare,
     },
   ],
 }

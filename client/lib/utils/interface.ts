@@ -4,34 +4,21 @@ export interface AuthPageProps {
   }>
 }
 
-export interface SsoUser {
+export interface AuthUser {
   id: string
-  aud: "authenticated"
   email: string
-  email_confirmed_at?: string | null
-  phone?: string | null
-  confirmed_at?: string | null
-  last_sign_in_at?: string | null
-  role?: string
-  updated_at?: string | null
-  created_at?: string | null
-  app_metadata: Record<string, unknown>
-  user_metadata: {
-    name?: string | null
-    full_name?: string | null
-    avatar_url?: string | null
-    picture?: string | null
-  }
+  name: string
+  image: string | null
 }
-
-export interface AuthUser extends SsoUser {}
 
 export type CallerMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
-export type CallerToastConfig = boolean | {
-  loading?: string
-  success?: string
-  error?: string
-}
+export type CallerToastConfig =
+  | boolean
+  | {
+      loading?: string
+      success?: string
+      error?: string
+    }
 
 export interface CallerOptions<TData = unknown> {
   url: string
@@ -50,8 +37,13 @@ export interface CallerExtraOptions {
   unwrapData?: boolean
 }
 
-export type CallerConfig<TData = unknown> = CallerOptions<TData> & CallerExtraOptions
-export type CallerRequestConfig<TData = unknown> = Omit<CallerOptions<TData>, "method" | "url"> & CallerExtraOptions
+export type CallerConfig<TData = unknown> = CallerOptions<TData> &
+  CallerExtraOptions
+export type CallerRequestConfig<TData = unknown> = Omit<
+  CallerOptions<TData>,
+  "method" | "url"
+> &
+  CallerExtraOptions
 
 export interface ApiErrorPayload {
   message?: unknown
@@ -142,7 +134,7 @@ export interface AuthMeResponse {
   error?: string
 }
 
-export interface SsoUserResponse {
+export interface AuthUserResponse {
   user?: AuthUser | null
   sso_sub?: string
   email?: string
@@ -156,7 +148,7 @@ export interface SsoAppContext {
   issued_at?: number
 }
 
-export interface SsoExchangeResponse extends SsoUserResponse {
+export interface SsoExchangeResponse extends AuthUserResponse {
   access_token?: string
   refresh_token?: string
   id_token?: string

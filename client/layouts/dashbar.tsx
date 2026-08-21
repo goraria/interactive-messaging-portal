@@ -13,18 +13,22 @@ import { PanelLeft } from "@gorth/primitive/cores/lucide"
 import { useSidebar } from "@gorth/primitive/custom/sidebar"
 import { useAuth } from "@/hooks/use-auth"
 import { Customizer } from "@gorth/primitive/element/customizer"
+import { visitor } from "@/lib/utils/constant"
+import { toNavigationUser } from "@/lib/utils/formatter"
 
 interface DashbarProps {
   onSidebarToggle?: () => void
 }
 
 export function Dashbar({ onSidebarToggle }: DashbarProps) {
-  const { loading, authenticated, login, register, logout } = useAuth()
+  const auth = useAuth()
+  const { account, loading, authenticated, login, register, logout } = auth
   const { toggleSidebar } = useSidebar()
   const handleSidebarToggle = onSidebarToggle ?? toggleSidebar
 
   return (
     <Container
+      user={account ? toNavigationUser(account) : visitor}
       auth={{ loading, authenticated, login, register, logout }}
       nav={{ main: [], secondary: [] }}
       left={

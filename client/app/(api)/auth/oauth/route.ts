@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { isAbsoluteHttpUrl, resolveRedirect } from "@/lib/formatter"
+import { isAbsoluteHttpUrl, resolveRedirect } from "@/lib/utils/formatter"
 
 export const runtime = "nodejs"
 

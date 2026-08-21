@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { routes, ssoOAuthClientId } from "@/lib/environment"
+import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
 
 export const runtime = "nodejs"
 

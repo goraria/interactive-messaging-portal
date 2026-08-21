@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button, Input, Label, Textarea } from "@/components/primitive/default"
 import { toast } from "@gorth/primitive/cores/sonner"
 import { useAuth } from "@/hooks/use-auth"
-import { normalizeRequestRecord, stringifyJson } from "@/lib/formatter"
+import { normalizeRequestRecord, stringifyJson } from "@/lib/utils/formatter"
 import { parseJsonInput } from "@/lib/utils/input"
 import type { DemoApiRequest } from "@/lib/utils/interface"
 import { demoJson } from "@/services/demo"
@@ -204,8 +204,8 @@ export default function Page() {
               {
                 id: account.id,
                 email: account.email,
-                app_metadata: account.app_metadata,
-                user_metadata: account.user_metadata,
+                name: account.name,
+                image: account.image,
                 authenticated,
               },
               null,

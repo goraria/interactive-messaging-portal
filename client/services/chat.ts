@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@gorth/primitive/cores/tanstack/query"
-import { apiBaseUrl } from "@/lib/environment"
+import { apiBaseUrl } from "@/lib/utils/environment"
 import {
   conversationMemberSchema,
   conversationDetailsSchema,
@@ -148,10 +148,10 @@ export function useCreateConversationMessageMutation(conversationId: string) {
         (current) =>
           current
             ? {
-                ...current,
-                lastMessage: message,
-                updatedAt: message.createdAt,
-              }
+              ...current,
+              lastMessage: message,
+              updatedAt: message.createdAt,
+            }
             : current
       )
       void queryClient.invalidateQueries({

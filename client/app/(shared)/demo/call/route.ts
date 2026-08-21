@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { verifySession } from "@/lib/dal"
+import { verifySession } from "@/lib/auth/dal"
 import type {
   DemoApiData,
   EndpointApiResponseEnvelope,

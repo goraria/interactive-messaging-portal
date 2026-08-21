@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { apiBaseUrl, routes, ssoOAuthClientId } from "@/lib/environment"
 import {
   clearAppAuthCookies,
   clearAuthStateCookie,
@@ -10,13 +9,14 @@ import {
   isValidAuthState,
   setAppSessionCookie,
   setAuthTokenCookies,
-} from "@/lib/dal"
+} from "@/lib/auth/dal"
 import {
   getOAuthUserInfo,
   readOAuthError,
   type OAuthTokenResponse,
 } from "@/lib/auth/oauth"
-import { getSsoUser, resolveInternalPath } from "@/lib/formatter"
+import { apiBaseUrl, routes, ssoOAuthClientId } from "@/lib/utils/environment"
+import { getSsoUser, resolveInternalPath } from "@/lib/utils/formatter"
 import type { AuthUser, SsoExchangeResponse } from "@/lib/utils/interface"
 
 export const runtime = "nodejs"

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { apiBaseUrl } from "@/lib/environment"
-import { verifySession } from "@/lib/dal"
+import { verifySession } from "@/lib/auth/dal"
+import { apiBaseUrl } from "@/lib/utils/environment"
 import { getAccountDisplayName } from "@/lib/utils/formatter"
 
 interface RouteContext {
@@ -71,11 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       Accept: "application/json",
       "x-gorth-user-id": encodeUserHeader(session.user.id),
       "x-gorth-user-name": encodeUserHeader(
-        getAccountDisplayName(
-          undefined,
-          session.user.email,
-          session.user.user_metadata
-        )
+        getAccountDisplayName(session.user)
       ),
       "x-gorth-user-email": encodeUserHeader(session.user.email),
     },

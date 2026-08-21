@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getCorsHeaders, resolveRedirect } from "@/lib/formatter"
+import { getCorsHeaders, resolveRedirect } from "@/lib/utils/formatter"
 
 const ssoServerUrl =
   process.env.SSO_SERVER_INTERNAL_URL ??

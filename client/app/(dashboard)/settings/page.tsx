@@ -1,4 +1,4 @@
-import { verifySession } from "@/lib/dal"
+import { verifySession } from "@/lib/auth/dal"
 import { redirect } from "next/navigation"
 import { getAccountDisplayName } from "@/lib/utils/formatter"
 
@@ -8,11 +8,7 @@ export default async function SettingPage() {
     redirect("/")
   }
 
-  const displayName = getAccountDisplayName(
-    undefined,
-    session.user.email,
-    session.user.user_metadata
-  )
+  const displayName = getAccountDisplayName(session.user)
 
   return (
     <div>

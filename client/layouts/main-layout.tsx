@@ -10,8 +10,9 @@ import {
 import { ChatSidebar } from "@/components/conversation/chat-sidebar"
 import { InfoSidebar } from "@/components/conversation/info-sidebar"
 import { Dashbar } from "@/layouts/dashbar"
-import { messageSidebar } from "@/lib/utils/constant"
-import { useAccount } from "@/hooks/use-user"
+import { messageSidebar, visitor } from "@/lib/utils/constant"
+import { useAuth } from "@/hooks/use-auth"
+import { useUser } from "@/hooks/use-user"
 import { ConversationProvider } from "@/hooks/use-conversation"
 import { useConversationsQuery } from "@/services/chat"
 import { toChatConversation } from "@/lib/utils/conversation"
@@ -61,7 +62,15 @@ type MainLayoutProps = Readonly<{
 export function MainLayout({ children, initialLeftOpen }: MainLayoutProps) {
   const router = useRouter()
   const [infoOpen, setInfoOpen] = useState(false)
-  const { user, sidebarUser, auth } = useAccount()
+  const auth = useAuth()
+  const { user, loading: userLoading, error: userError } = useUser()
+  const sidebarUser = user
+    ? {
+        name: user.name,
+        email: user.email,
+        avatar: user.image ?? "",
+      }
+    : visitor
   const conversationsQuery = useConversationsQuery(
     auth.authenticated && Boolean(user)
   )
@@ -103,9 +112,12 @@ export function MainLayout({ children, initialLeftOpen }: MainLayoutProps) {
               navMessage: conversations,
             }}
             conversationsLoading={
-              conversationsQuery.isPending && auth.authenticated
+              userLoading ||
+              (conversationsQuery.isPending && auth.authenticated)
             }
-            conversationsError={conversationsQuery.error?.message ?? null}
+            conversationsError={
+              conversationsQuery.error?.message ?? userError?.message ?? null
+            }
             auth={auth}
           />
         }

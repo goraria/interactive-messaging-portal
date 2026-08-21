@@ -1,7 +1,7 @@
 import "server-only"
 
 import { createHash } from "node:crypto"
-import { routes, ssoOAuthClientId } from "@/lib/environment"
+import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
 import type { AuthUser } from "@/lib/utils/interface"
 
 export const oauthAccessTokenMaxAge = 60 * 60
@@ -131,25 +131,9 @@ export async function getOAuthUserInfo(
     error: null,
     user: {
       id: userInfo.sub,
-      aud: "authenticated",
       email: userInfo.email,
-      email_confirmed_at: userInfo.email_verified
-        ? (userInfo.updated_at ?? null)
-        : null,
-      confirmed_at: userInfo.email_verified
-        ? (userInfo.updated_at ?? null)
-        : null,
-      phone: null,
-      role: "authenticated",
-      updated_at: userInfo.updated_at ?? null,
-      created_at: null,
-      app_metadata: { provider: "better-auth-oauth-provider" },
-      user_metadata: {
-        name: userInfo.name ?? userInfo.email,
-        full_name: userInfo.name ?? userInfo.email,
-        avatar_url: userInfo.picture ?? null,
-        picture: userInfo.picture ?? null,
-      },
+      name: userInfo.name ?? userInfo.email,
+      image: userInfo.picture ?? null,
     },
   }
 }
