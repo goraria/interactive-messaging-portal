@@ -2,7 +2,7 @@
 
 import { Geist, Geist_Mono, Inter } from "next/font/google"
 
-import "@gorth/primitive/globals.css"
+import "@/styles/globals.css"
 import { ApplicationProvider } from "@gorth/primitive/providers/application"
 import { AuthProvider } from "@/providers/auth"
 import { cn } from "@/lib/utils"

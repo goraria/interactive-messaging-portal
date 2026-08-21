@@ -38,11 +38,13 @@ async function requestLogout(returnTo: unknown = "/") {
     return
   }
 
-  await axios.delete<AuthMeResponse>("/auth/me", {
+  const response = await axios.delete<AuthMeResponse>("/auth/me", {
     withCredentials: true,
   })
 
-  window.location.replace(resolveInternalPath(returnTo))
+  window.location.replace(
+    response.data.logout_url ?? resolveInternalPath(returnTo)
+  )
 }
 
 export async function me(): Promise<AuthUser | null> {

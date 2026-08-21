@@ -131,6 +131,7 @@ export interface EndpointApiResponseEnvelope<TData = unknown> {
 export interface AuthMeResponse {
   user?: AuthUser | null
   gorth_app?: Record<string, unknown>
+  logout_url?: string | null
   error?: string
 }
 
@@ -157,11 +158,5 @@ export interface SsoExchangeResponse extends AuthUserResponse {
   refresh_token_expires_in?: number
   scope?: string
   gorth_app?: SsoAppContext & Record<string, unknown>
-  error?: string
-}
-
-export interface AuthMeResponse {
-  user?: AuthUser | null
-  gorth_app?: Record<string, unknown>
   error?: string
 }

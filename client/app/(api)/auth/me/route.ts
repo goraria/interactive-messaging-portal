@@ -8,6 +8,7 @@ import {
   setAuthTokenCookies,
   verifySession,
 } from "@/lib/auth/dal"
+import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
 import {
   getOAuthUserInfo,
   isAccessTokenExpired,
@@ -73,6 +74,20 @@ function logUserInfoFailure(result: OAuthUserInfoResult) {
     error: result.error?.error,
     description: result.error?.error_description,
   })
+}
+
+function getEndSessionUrl(request: NextRequest, idToken?: string) {
+  if (!idToken) return null
+
+  const url = new URL(
+    "/auth/oauth2/end-session",
+    new URL(routes.login).origin
+  )
+  url.searchParams.set("id_token_hint", idToken)
+  url.searchParams.set("client_id", ssoOAuthClientId)
+  url.searchParams.set("post_logout_redirect_uri", request.nextUrl.origin)
+
+  return url.toString()
 }
 
 async function verifyAccessToken(accessToken: string) {
@@ -206,8 +221,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const session = await verifySession()
   const refreshToken = request.cookies.get(gorthRefreshTokenCookie)?.value
-  const response = noStoreJson({ user: null })
+  const response = noStoreJson({
+    user: null,
+    logout_url: getEndSessionUrl(request, session?.sso_id_token),
+  })
   const logoutRequests: Promise<unknown>[] = []
 
   if (refreshToken) {
