@@ -1,0 +1,3 @@
+onlyBuiltDependencies:
+  - "@gorth/mechanism"
+  - "@gorth/structure"
