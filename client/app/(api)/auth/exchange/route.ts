@@ -13,9 +13,10 @@ import {
 import {
   getOAuthUserInfo,
   readOAuthError,
+  syncAppUser,
   type OAuthTokenResponse,
 } from "@/lib/auth/oauth"
-import { apiBaseUrl, routes, ssoOAuthClientId } from "@/lib/utils/environment"
+import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
 import { getSsoUser, resolveInternalPath } from "@/lib/utils/formatter"
 import type { AuthUser, SsoExchangeResponse } from "@/lib/utils/interface"
 
@@ -376,33 +377,6 @@ async function exchangeCode(
   return (await response.json()) as OAuthTokenResponse
 }
 
-async function syncAppUser(accessToken: string) {
-  if (!apiBaseUrl) {
-    throw new Error("missing_app_server_url")
-  }
-
-  let response: Response
-
-  try {
-    response = await fetch(new URL("/auth/sync-user", apiBaseUrl), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    })
-  } catch {
-    throw new Error("app_user_sync_failed")
-  }
-
-  if (!response.ok) {
-    throw Object.assign(new Error("app_user_sync_failed"), {
-      status: response.status,
-    })
-  }
-}
-
 function createSsoPayload(
   request: NextRequest,
   token: OAuthTokenResponse,
@@ -580,7 +554,7 @@ async function createExchangeResponse(
   setAuthTokenCookies(response, payload)
   setAppSessionCookie(
     response,
-    createAppSession(user, payload.gorth_app, payload.id_token)
+    createAppSession(user, payload.gorth_app, payload.id_token, Date.now())
   )
 
   return response

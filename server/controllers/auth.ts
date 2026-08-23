@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express"
 
 import type { AuthContext } from "@/middlewares/auth"
-import { syncUser as syncUserService } from "@/services/chat"
+import { syncUser as syncUserService } from "@/services/users"
 
 export async function syncUser(
   _req: Request,

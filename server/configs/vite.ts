@@ -65,11 +65,12 @@ function printServerStarted(server: ViteDevServer, mode: string): void {
   const environments = environmentFiles(mode) || "none"
   const readyIn = Math.round(performance.now() - configLoadedAt)
 
-  console.log(`${pc.blue("▼ Express.js 5.2.1")} (Vite ${viteVersion})`)
+  console.log(`${pc.blue(`▼ Vite.js ${viteVersion}`)} (Express.js 5.2.1)`)
   console.log(`- Local:         ${localUrl}`)
   console.log(`- Network:       ${networkUrl}`)
   console.log(`- Environments: ${environments}`)
   console.log(Logger(`Ready in ${readyIn}ms`, "success", "green"))
+  console.log(Logger(`Running vite.config.ts took ${readyIn}ms`, "success", "green"))
   console.log()
 }
 

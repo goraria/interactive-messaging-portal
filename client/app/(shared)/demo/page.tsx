@@ -4,10 +4,13 @@ import { useState } from "react"
 import { Button, Input, Label, Textarea } from "@/components/primitive/default"
 import { toast } from "@gorth/primitive/cores/sonner"
 import { useAuth } from "@/hooks/use-auth"
-import { normalizeRequestRecord, stringifyJson } from "@/lib/utils/formatter"
-import { parseJsonInput } from "@/lib/utils/input"
+import {
+  normalizeRequestRecord,
+  parseJsonInput,
+  stringifyJson,
+} from "@/lib/utils/formatter"
 import type { DemoApiRequest } from "@/lib/utils/interface"
-import { demoJson } from "@/services/demo"
+import { useDemoJsonMutation } from "@/services/demo"
 import { Spinner } from "@gorth/primitive/pattern/spinner"
 
 const initialParams = { from: "demo-page" }
@@ -34,12 +37,9 @@ export default function Page() {
     headers: initialHeaders,
     timeout: initialTimeout,
   }))
-  const {
-    data: resultDemo,
-    refresh,
-    loading: demoLoading,
-    error: demoError,
-  } = demoJson(requestArg)
+  const [runDemo, { data: resultDemo, error: demoError, isLoading }] =
+    useDemoJsonMutation()
+  const demoLoading = isLoading
 
   async function fetchDemo() {
     const params = parseJsonInput(paramsText, {
@@ -66,10 +66,12 @@ export default function Page() {
       timeout,
     }
     setRequestArg(nextArg)
-    const result = await refresh(nextArg)
-    if (result.error)
-      toast.error(result.error.error ?? String(result.error.status))
-    else toast.success("Demo request sent successfully")
+    try {
+      await runDemo(nextArg).unwrap()
+      toast.success("Demo request sent successfully")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Request failed")
+    }
   }
 
   function resetDemo() {
@@ -184,9 +186,7 @@ export default function Page() {
         {demoLoading ? (
           <Spinner variant="infinite" size={24} className="mt-4" />
         ) : demoError ? (
-          <p className="text-destructive mt-4 text-sm">
-            {demoError.error ?? String(demoError.status)}
-          </p>
+          <p className="text-destructive mt-4 text-sm">{demoError.message}</p>
         ) : (
           <pre className="mt-4 max-h-96 overflow-auto rounded-md border p-3 text-xs">
             {JSON.stringify(resultDemo, null, 2)}

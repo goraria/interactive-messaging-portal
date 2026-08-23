@@ -12,7 +12,7 @@ import {
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const { account, loading: accountLoading, error, refresh } = useAuthAccount()
-  const logoutMutation = useAuthLogoutMutation()
+  const [logoutMutation, logoutState] = useAuthLogoutMutation()
 
   const login = useCallback(
     (returnTo = "/chat") => {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const logout = useCallback(
     async (returnTo = "/") => {
-      await logoutMutation.mutateAsync(returnTo)
+      await logoutMutation(returnTo).unwrap()
     },
     [logoutMutation]
   )
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value = useMemo<AuthContextValue>(
     () => ({
       account,
-      loading: accountLoading || logoutMutation.isPending,
+      loading: accountLoading || logoutState.isLoading,
       error: error ?? null,
       authenticated: Boolean(account),
       refresh,
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       error,
       login,
       logout,
-      logoutMutation.isPending,
+      logoutState.isLoading,
       refresh,
       register,
     ]

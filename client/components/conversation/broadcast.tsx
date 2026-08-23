@@ -22,7 +22,7 @@ import { Spinner } from "@gorth/primitive/pattern/spinner"
 import { type ChatMessage, useBroadcast } from "@/hooks/use-conversation"
 import { Message } from "@/components/conversation/message"
 import { ConversationState } from "@/components/conversation/conversation-state"
-import { cn } from "@/lib/utils"
+import { cn } from "@gorth/primitive/lib/utils"
 import { shouldShowHeader } from "@/lib/utils/conversation"
 
 interface BroadcastProps {
@@ -110,8 +110,8 @@ export function Broadcast({
                           !messages[index + 1] ||
                           messages[index + 1].user.id !== message.user.id ||
                           new Date(messages[index + 1].createdAt).getTime() -
-                            new Date(message.createdAt).getTime() >
-                            5 * 60 * 1000
+                          new Date(message.createdAt).getTime() >
+                          5 * 60 * 1000
                         }
                         avatar={userAvatars[message.user.id]}
                       />

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { verifySession } from "@/lib/auth/dal"
+import { cookies } from "next/headers"
+import { gorthAccessTokenCookie, verifySession } from "@/lib/auth/dal"
 import { apiBaseUrl } from "@/lib/utils/environment"
-import { getAccountDisplayName } from "@/lib/utils/formatter"
 
 interface RouteContext {
   params: Promise<{
@@ -13,8 +13,9 @@ function getServerBaseUrl() {
   return apiBaseUrl ?? "http://localhost:8080"
 }
 
-function encodeUserHeader(value: string | undefined | null) {
-  return encodeURIComponent(value ?? "")
+async function getAccessToken() {
+  const cookieStore = await cookies()
+  return cookieStore.get(gorthAccessTokenCookie)?.value ?? null
 }
 
 async function getTargetUrl(request: NextRequest, context: RouteContext) {
@@ -30,10 +31,16 @@ async function getTargetUrl(request: NextRequest, context: RouteContext) {
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  const accessToken = await getAccessToken()
+  if (!accessToken) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+  }
+
   const response = await fetch(await getTargetUrl(request, context), {
     method: "GET",
     headers: {
       Accept: "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
     cache: "no-store",
   })
@@ -51,8 +58,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const session = await verifySession()
+  const accessToken = await getAccessToken()
 
-  if (!session) {
+  if (!session || !accessToken) {
     return NextResponse.json(
       { error: "unauthorized" },
       {
@@ -69,11 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
-      "x-gorth-user-id": encodeUserHeader(session.user.id),
-      "x-gorth-user-name": encodeUserHeader(
-        getAccountDisplayName(session.user)
-      ),
-      "x-gorth-user-email": encodeUserHeader(session.user.email),
+      Authorization: `Bearer ${accessToken}`,
     },
     body: await request.text(),
     cache: "no-store",

@@ -5,7 +5,7 @@ import type { Metadata } from "next"
 import "@/styles/globals.css"
 import { ApplicationProvider } from "@gorth/primitive/providers/application"
 import { AuthProvider } from "@/providers/auth"
-import { cn } from "@/lib/utils"
+import { cn } from "@gorth/primitive/lib/utils"
 import { appGlobal } from "@/lib/utils/constant";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })

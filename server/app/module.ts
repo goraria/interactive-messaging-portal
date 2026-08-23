@@ -1,7 +1,6 @@
 import express, { Request, Response, NextFunction } from "express"
-import path from "path";
-import dotenv from 'dotenv';
-import session from "express-session";
+import dotenv from "dotenv"
+import session from "express-session"
 import { Logger } from "@gorth/mechanism/lib/logger"
 import {
   corsConfig,
@@ -16,12 +15,18 @@ import {
   expressLocalUrl,
   isExpressProduction,
 } from "@/lib/utils/environment"
-import authRoutes from "@/routes/auth"
-import chatRoutes from "@/routes/chat"
+import { authRoutes } from "@/routes/auth"
+import { conversationMembersRoutes } from "@/routes/conversation-members"
+import { conversationsRoutes } from "@/routes/conversations"
+import { messageAttachmentsRoutes } from "@/routes/message-attachments"
+import { messageReactionsRoutes } from "@/routes/message-reactions"
+import { messageReceiptsRoutes } from "@/routes/message-receipts"
+import { messagesRoutes } from "@/routes/messages"
+import { usersRoutes } from "@/routes/users"
 import labRoutes from "@/routes/lab"
 import sharedRoutes from "@/routes/shared"
 
-export default async function AppModule() {
+export async function AppModule() {
   const app = express()
 
   // ================================
@@ -83,7 +88,7 @@ export default async function AppModule() {
   const productionOrigins = [
     expressClientUrl,
     expressLocalUrl,
-    ...((allowedRedirectOrigins ?? "").split(",")),
+    ...(allowedRedirectOrigins ?? "").split(","),
   ]
     .map((origin) => origin?.trim())
     .filter((origin): origin is string => Boolean(origin))
@@ -92,12 +97,18 @@ export default async function AppModule() {
     corsConfig({
       origin: isExpressProduction ? productionOrigins : true,
       credentials: true,
-    }),
+    })
   )
 
   /* ROUTES */
-  app.use("/auth", authRoutes)
-  app.use("/chat", chatRoutes)
+  app.use("/auth", authRoutes())
+  app.use("/chat", usersRoutes())
+  app.use("/chat", conversationsRoutes())
+  app.use("/chat", conversationMembersRoutes())
+  app.use("/chat", messagesRoutes())
+  app.use("/chat", messageAttachmentsRoutes())
+  app.use("/chat", messageReactionsRoutes())
+  app.use("/chat", messageReceiptsRoutes())
   app.use("/lab", labRoutes)
   app.use("/", sharedRoutes)
 

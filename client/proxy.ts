@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-const sharedRoutes = new Set(["/", "/demo", "/lab"])
 const appSessionCookie = "gorth.session_app"
+const sharedRoutes = new Set(["/", "/demo", "/lab"])
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+import { cn } from "@gorth/primitive/lib/utils"
 import type { ChatMessage } from "@/hooks/use-conversation"
 import {
   Avatar,

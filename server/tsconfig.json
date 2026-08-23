@@ -25,5 +25,11 @@
     "noEmit": true
   },
   "include": ["app/main.ts", "vite.config.ts", "express-env.d.ts", "**/*.ts"],
-  "exclude": ["node_modules", "dist", ".express"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".express",
+    "app/index.ts",
+    "lib/prisma/**"
+  ]
 }

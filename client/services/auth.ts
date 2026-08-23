@@ -1,50 +1,87 @@
 "use client"
 
 import { useCallback } from "react"
-import axios from "@gorth/structure/cores/axios"
+import type { AxiosResponse } from "axios"
+
 import {
+  caller,
+  createMutationService,
+  createQueryService,
   useMutation,
   useQuery,
-  useQueryClient,
-} from "@gorth/primitive/cores/tanstack/query"
-import { currentUserQueryKey } from "@/services/chat"
+} from "@/lib/utils/caller"
 import { resolveInternalPath } from "@/lib/utils/formatter"
 import type { AuthMeResponse, AuthUser } from "@/lib/utils/interface"
 
+/* eslint-disable react-hooks/rules-of-hooks -- useQuery/useMutation build service definitions here. */
+
 export const authQueryKey = ["auth", "me"] as const
 
-async function requestMe(): Promise<AuthUser | null> {
-  try {
-    const response = await axios.get<AuthMeResponse>("/auth/me", {
-      withCredentials: true,
-    })
+function getAccountRequest() {
+  return {
+    baseURL: null,
+    url: "/auth/me",
+    method: "GET" as const,
+    auth: false,
+    credentials: "include" as const,
+    unwrapData: false,
+    validateStatus: (status: number) =>
+      (status >= 200 && status < 300) || status === 401,
+    responseHandler: (response: AxiosResponse<unknown>) => {
+      const payload = response.data as AuthMeResponse
 
-    if (response.status === 204) {
-      return null
-    }
-
-    return response.data.user ?? null
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      return null
-    }
-
-    throw error
+      return response.status === 204 || response.status === 401
+        ? null
+        : (payload.user ?? null)
+    },
   }
 }
 
-async function requestLogout(returnTo: unknown = "/") {
-  if (typeof window === "undefined") {
-    return
+function getLogoutRequest() {
+  return {
+    baseURL: null,
+    url: "/auth/me",
+    method: "DELETE" as const,
+    auth: false,
+    credentials: "include" as const,
+    unwrapData: false,
+    responseHandler: (response: AxiosResponse<unknown>) =>
+      response.data as AuthMeResponse,
   }
+}
 
-  const response = await axios.delete<AuthMeResponse>("/auth/me", {
-    withCredentials: true,
-  })
+const accountService = useQuery<AuthUser | null, undefined>({
+  queryKey: authQueryKey,
+  query: getAccountRequest,
+  queryOptions: {
+    retry: false,
+  },
+})
 
-  window.location.replace(
-    response.data.logout_url ?? resolveInternalPath(returnTo)
-  )
+const logoutService = useMutation<AuthMeResponse, string | undefined>({
+  query: () => getLogoutRequest(),
+  invalidates: [authQueryKey],
+})
+
+const useAccountQuery = createQueryService(accountService)
+const useLogoutMutation = createMutationService(logoutService)
+
+async function requestMe(): Promise<AuthUser | null> {
+  return caller<AuthUser | null>(getAccountRequest())
+}
+
+async function requestLogout(returnTo: unknown = "/") {
+  if (typeof window === "undefined") return
+
+  try {
+    const response = await caller<AuthMeResponse>(getLogoutRequest())
+
+    window.location.replace(
+      response.logout_url ?? resolveInternalPath(returnTo)
+    )
+  } catch {
+    window.location.replace(resolveInternalPath(returnTo))
+  }
 }
 
 export async function me(): Promise<AuthUser | null> {
@@ -56,28 +93,13 @@ export async function me(): Promise<AuthUser | null> {
 }
 
 export function useAuthAccount() {
-  const queryClient = useQueryClient()
-  const query = useQuery<AuthUser | null, Error>({
-    queryKey: authQueryKey,
-    queryFn: requestMe,
-    retry: false,
-  })
+  const query = useAccountQuery(undefined)
+  const { refetch } = query
 
   const refresh = useCallback(async () => {
-    try {
-      const account = await queryClient.fetchQuery({
-        queryKey: authQueryKey,
-        queryFn: requestMe,
-        retry: false,
-      })
-
-      queryClient.setQueryData(authQueryKey, account)
-      return account
-    } catch {
-      queryClient.setQueryData(authQueryKey, null)
-      return null
-    }
-  }, [queryClient])
+    const result = await refetch()
+    return result.data ?? null
+  }, [refetch])
 
   return {
     account: query.data ?? null,
@@ -87,18 +109,8 @@ export function useAuthAccount() {
   }
 }
 
-export function login(returnTo = "/") {
-  startAuth("sign-in", returnTo)
-}
-
-export function register(returnTo = "/") {
-  startAuth("sign-up", returnTo)
-}
-
-function startAuth(mode: "sign-in" | "sign-up", returnTo = "/") {
-  if (typeof window === "undefined") {
-    return
-  }
+function startAuth(mode: "sign-in" | "sign-up", returnTo: unknown = "/") {
+  if (typeof window === "undefined") return
 
   const url = new URL("/auth/start", window.location.origin)
   url.searchParams.set("mode", mode)
@@ -106,16 +118,46 @@ function startAuth(mode: "sign-in" | "sign-up", returnTo = "/") {
   window.location.assign(url.toString())
 }
 
-export function useAuthLogoutMutation() {
-  const queryClient = useQueryClient()
+export function login(returnTo: unknown = "/") {
+  startAuth("sign-in", returnTo)
+}
 
-  return useMutation({
-    mutationFn: (returnTo?: string) => requestLogout(returnTo),
-    onSuccess: () => {
-      queryClient.setQueryData(authQueryKey, null)
-      queryClient.removeQueries({ queryKey: currentUserQueryKey })
+export function register(returnTo: unknown = "/") {
+  startAuth("sign-up", returnTo)
+}
+
+export function useAuthLogoutMutation() {
+  const [trigger, state] = useLogoutMutation()
+
+  const logout = useCallback(
+    (returnTo?: string) => {
+      const promise = trigger(returnTo)
+        .unwrap()
+        .then((response) => {
+          if (typeof window !== "undefined") {
+            window.location.replace(
+              response.logout_url ?? resolveInternalPath(returnTo)
+            )
+          }
+
+          return response
+        })
+        .catch((error) => {
+          if (typeof window !== "undefined") {
+            window.location.replace(resolveInternalPath(returnTo))
+          }
+
+          throw error
+        })
+
+      return {
+        unwrap: () => promise,
+      }
     },
-  })
+    [trigger]
+  )
+
+  return [logout, state] as const
 }
 
 export async function logout(returnTo = "/") {

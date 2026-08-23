@@ -1,18 +1,11 @@
 "use client"
 
-import { useQuery } from "@gorth/primitive/cores/tanstack/query"
 import { useAuth } from "@/hooks/use-auth"
-import { currentUserQueryKey, getCurrentUser } from "@/services/chat"
+import { useCurrentUserQuery } from "@/services/chat"
 
 export function useUser() {
   const auth = useAuth()
-  const query = useQuery({
-    queryKey: [...currentUserQueryKey, auth.account?.id],
-    queryFn: getCurrentUser,
-    enabled: auth.authenticated && Boolean(auth.account?.id),
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  })
+  const query = useCurrentUserQuery(auth.authenticated, auth.account?.id)
 
   async function refresh() {
     const account = await auth.refresh()

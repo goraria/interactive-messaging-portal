@@ -1,7 +1,7 @@
 import "server-only"
 
 import { createHash } from "node:crypto"
-import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
+import { apiBaseUrl, routes, ssoOAuthClientId } from "@/lib/utils/environment"
 import type { AuthUser } from "@/lib/utils/interface"
 
 export const oauthAccessTokenMaxAge = 60 * 60
@@ -54,6 +54,49 @@ export async function readOAuthError(response: Response) {
   } catch {
     return null
   }
+}
+
+export async function syncAppUser(accessToken: string) {
+  if (!apiBaseUrl) {
+    throw new Error("missing_app_server_url")
+  }
+
+  let response: Response
+
+  try {
+    response = await fetch(new URL("/auth/sync-user", apiBaseUrl), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    })
+  } catch (error) {
+    console.error("[auth] Chat user sync request failed", {
+      endpoint: "/auth/sync-user",
+      message: error instanceof Error ? error.message : "unknown_error",
+    })
+    throw new Error("app_user_sync_failed")
+  }
+
+  if (!response.ok) {
+    const detail = await readOAuthError(response)
+    console.error("[auth] Chat user sync failed", {
+      endpoint: "/auth/sync-user",
+      status: response.status,
+      error: detail?.error,
+      description: detail?.error_description,
+    })
+    throw Object.assign(new Error("app_user_sync_failed"), {
+      status: response.status,
+    })
+  }
+
+  console.info("[auth] Chat user synced", {
+    endpoint: "/auth/sync-user",
+    status: response.status,
+  })
 }
 
 export function getJwtExpiration(token: string) {

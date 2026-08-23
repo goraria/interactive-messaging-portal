@@ -44,7 +44,8 @@ export function useRealtimeChat({
     NonNullable<typeof supabase>["channel"]
   > | null>(null)
   const messagesQuery = useConversationMessagesQuery(conversationId)
-  const sendMutation = useCreateConversationMessageMutation(conversationId)
+  const [sendMessageMutation, sendState] =
+    useCreateConversationMessageMutation(conversationId)
   const [realtimeState, setRealtimeState] = useState<{
     conversationId: string | null
     error: string | null
@@ -114,14 +115,14 @@ export function useRealtimeChat({
     async (content: string) => {
       const trimmed = content.trim()
 
-      if (!trimmed || sendMutation.isPending) {
+      if (!trimmed || sendState.isLoading) {
         return null
       }
 
       try {
-        const message = await sendMutation.mutateAsync({
+        const message = await sendMessageMutation({
           content: trimmed,
-        })
+        }).unwrap()
         await onMessage?.([message])
         await channelRef.current?.send({
           type: "broadcast",
@@ -134,7 +135,7 @@ export function useRealtimeChat({
         return null
       }
     },
-    [onMessage, sendMutation]
+    [onMessage, sendMessageMutation, sendState.isLoading]
   )
 
   const messages = messagesQuery.data ?? emptyMessages
@@ -146,13 +147,13 @@ export function useRealtimeChat({
   const error =
     realtimeError ??
     messagesQuery.error?.message ??
-    sendMutation.error?.message ??
+    sendState.error?.message ??
     null
 
   return {
     messages,
     loading: messagesQuery.isPending,
-    sending: sendMutation.isPending,
+    sending: sendState.isLoading,
     error,
     sendMessage,
     username,

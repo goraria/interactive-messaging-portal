@@ -15,6 +15,7 @@ import {
   refreshOAuthTokens,
   revokeOAuthToken,
   shouldRefreshCredentials,
+  syncAppUser,
   type OAuthUserInfoResult,
   type OAuthTokenResponse,
 } from "@/lib/auth/oauth"
@@ -66,6 +67,24 @@ function unauthenticated() {
 
 function ssoUnavailable() {
   return noStoreJson({ user: null, error: "sso_unavailable" }, 502)
+}
+
+function appUserSyncFailed() {
+  return noStoreJson({ user: null, error: "app_user_sync_failed" }, 502)
+}
+
+async function ensureAppUserSynced(
+  accessToken: string,
+  syncedAt: number | undefined
+) {
+  if (syncedAt) return syncedAt
+
+  try {
+    await syncAppUser(accessToken)
+    return Date.now()
+  } catch {
+    return null
+  }
 }
 
 function logUserInfoFailure(result: OAuthUserInfoResult) {
@@ -135,10 +154,31 @@ export async function GET(request: NextRequest) {
         return unauthenticated()
       }
 
-      return noStoreJson({
+      const appUserSyncedAt = await ensureAppUserSynced(
+        accessToken,
+        session.app_user_synced_at
+      )
+
+      if (!appUserSyncedAt) return appUserSyncFailed()
+
+      const response = noStoreJson({
         user: userInfo.user,
         gorth_app: session.gorth_app,
       })
+
+      if (!session.app_user_synced_at) {
+        setAppSessionCookie(
+          response,
+          createAppSession(
+            userInfo.user,
+            session.gorth_app,
+            session.sso_id_token,
+            appUserSyncedAt
+          )
+        )
+      }
+
+      return response
     }
 
     logUserInfoFailure(userInfo)
@@ -203,6 +243,13 @@ export async function GET(request: NextRequest) {
     return unauthenticated()
   }
 
+  const appUserSyncedAt = await ensureAppUserSynced(
+    refreshedAccessToken,
+    session.app_user_synced_at
+  )
+
+  if (!appUserSyncedAt) return appUserSyncFailed()
+
   const response = noStoreJson({
     user,
     gorth_app: session.gorth_app,
@@ -213,7 +260,8 @@ export async function GET(request: NextRequest) {
     createAppSession(
       user,
       session.gorth_app,
-      refreshedToken.id_token ?? session.sso_id_token
+      refreshedToken.id_token ?? session.sso_id_token,
+      appUserSyncedAt
     )
   )
 

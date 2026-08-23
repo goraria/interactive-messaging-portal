@@ -1,6 +1,6 @@
 import type { LucideIcon } from "@gorth/primitive/cores/lucide"
 import { Spinner } from "@gorth/primitive/pattern/spinner"
-import { cn } from "@/lib/utils"
+import { cn } from "@gorth/primitive/lib/utils"
 
 interface ConversationStateProps {
   title?: string

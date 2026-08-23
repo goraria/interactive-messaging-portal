@@ -43,6 +43,7 @@ export interface AppSession {
   email?: string
   sso_id_token?: string
   gorth_app?: Record<string, unknown>
+  app_user_synced_at?: number
   issued_at: number
   expires_at: number
 }
@@ -132,7 +133,8 @@ function openSession(value: string): AppSession | null {
 export function createAppSession(
   user: AuthUser,
   gorthApp?: Record<string, unknown>,
-  ssoIdToken?: string
+  ssoIdToken?: string,
+  appUserSyncedAt?: number
 ): AppSession {
   const now = Date.now()
   const sessionUser = createSessionUser(user)
@@ -143,6 +145,7 @@ export function createAppSession(
     email: sessionUser.email,
     sso_id_token: ssoIdToken,
     gorth_app: gorthApp,
+    app_user_synced_at: appUserSyncedAt,
     issued_at: now,
     expires_at: now + appSessionMaxAgeSeconds * 1000,
   }

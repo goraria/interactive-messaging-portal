@@ -2,11 +2,12 @@
 
 import { z, type ZodType } from "@gorth/structure/cores/zod"
 import {
+  caller,
+  createMutationService,
+  createQueryService,
   useMutation,
   useQuery,
-  useQueryClient,
-} from "@gorth/primitive/cores/tanstack/query"
-import { apiBaseUrl } from "@/lib/utils/environment"
+} from "@/lib/utils/caller"
 import {
   conversationMemberSchema,
   conversationDetailsSchema,
@@ -52,17 +53,13 @@ import {
   type User,
 } from "@/schemas/chat"
 
+/* eslint-disable react-hooks/rules-of-hooks -- useQuery/useMutation build service definitions here. */
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE"
   body?: unknown
   params?: Record<string, string | number | boolean | null | undefined>
   proxy?: boolean
-}
-
-interface ApiEnvelope {
-  data?: unknown
-  error?: string
-  issues?: unknown
 }
 
 const listUsersSchema = z.array(userSchema)
@@ -76,7 +73,6 @@ const listMessagesSchema = z.array(messageSchema)
 const listMessageAttachmentsSchema = z.array(messageAttachmentSchema)
 const listMessageReactionsSchema = z.array(messageReactionSchema)
 const listMessageReceiptsSchema = z.array(messageReceiptSchema)
-let authRefreshRequest: Promise<Response> | null = null
 
 export const currentUserQueryKey = ["chat", "current-user"] as const
 export const chatQueryKeys = {
@@ -88,34 +84,155 @@ export const chatQueryKeys = {
     ["chat", "messages", conversationId] as const,
 }
 
-export function useUsersQuery(enabled = true, limit = 50) {
-  return useQuery({
-    queryKey: [...chatQueryKeys.users, { limit }],
-    queryFn: () => listUsers(limit),
+interface ListQueryInput {
+  enabled: boolean
+  limit: number
+}
+
+interface ConversationQueryInput {
+  conversationId: string
+  enabled: boolean
+}
+
+interface ConversationMessagesQueryInput extends ConversationQueryInput {
+  limit: number
+}
+
+interface CreateConversationMessageVariables {
+  conversationId: string
+  input: CreateRoomMessageInput
+}
+
+interface CurrentUserQueryInput {
+  enabled: boolean
+  userId?: string
+}
+
+const usersService = useQuery<User[], ListQueryInput>({
+  queryKey: ({ limit }: ListQueryInput) =>
+    [...chatQueryKeys.users, { limit }] as const,
+  query: ({ limit }: ListQueryInput) => ({
+    url: "/chat/users",
+    method: "GET",
+    params: { limit },
+    schema: listUsersSchema,
+    cache: "no-store",
+  }),
+  queryOptions: ({ enabled }: ListQueryInput) => ({
     enabled,
     retry: false,
     staleTime: 30_000,
-  })
-}
+  }),
+})
 
-export function useConversationsQuery(enabled = true, limit = 50) {
-  return useQuery({
-    queryKey: [...chatQueryKeys.conversations, { limit }],
-    queryFn: () => listConversations(limit),
+const conversationsService = useQuery<ConversationDetails[], ListQueryInput>({
+  queryKey: ({ limit }: ListQueryInput) =>
+    [...chatQueryKeys.conversations, { limit }] as const,
+  query: ({ limit }: ListQueryInput) => ({
+    url: "/chat/conversations",
+    method: "GET",
+    params: { limit },
+    schema: listConversationsSchema,
+    cache: "no-store",
+  }),
+  queryOptions: ({ enabled }: ListQueryInput) => ({
     enabled,
     retry: false,
     staleTime: 30_000,
-  })
-}
+  }),
+})
 
-export function useConversationQuery(conversationId: string, enabled = true) {
-  return useQuery({
-    queryKey: chatQueryKeys.conversation(conversationId),
-    queryFn: () => getConversation(conversationId),
+const conversationService = useQuery<
+  ConversationDetails,
+  ConversationQueryInput
+>({
+  queryKey: ({ conversationId }: ConversationQueryInput) =>
+    chatQueryKeys.conversation(conversationId),
+  query: ({ conversationId }: ConversationQueryInput) => ({
+    url: `/chat/conversations/${encodeURIComponent(conversationId)}`,
+    method: "GET",
+    schema: conversationDetailsSchema,
+    cache: "no-store",
+  }),
+  queryOptions: ({ conversationId, enabled }: ConversationQueryInput) => ({
     enabled: enabled && Boolean(conversationId),
     retry: false,
     staleTime: 30_000,
-  })
+  }),
+})
+
+const messagesService = useQuery<Message[], ConversationMessagesQueryInput>({
+  queryKey: ({ conversationId }: ConversationMessagesQueryInput) =>
+    chatQueryKeys.messages(conversationId),
+  query: ({ conversationId, limit }: ConversationMessagesQueryInput) => ({
+    url: `/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    method: "GET",
+    params: { limit },
+    schema: listMessagesSchema,
+    cache: "no-store",
+  }),
+  queryOptions: ({
+    conversationId,
+    enabled,
+  }: ConversationMessagesQueryInput) => ({
+    enabled: enabled && Boolean(conversationId),
+    retry: false,
+    staleTime: 30_000,
+  }),
+})
+
+const currentUserService = useQuery<User, CurrentUserQueryInput>({
+  queryKey: ({ userId }: CurrentUserQueryInput) =>
+    [...currentUserQueryKey, userId] as const,
+  query: {
+    url: "/chat/users/me",
+    method: "GET",
+    schema: userSchema,
+    cache: "no-store",
+  },
+  queryOptions: ({ enabled, userId }: CurrentUserQueryInput) => ({
+    enabled: enabled && Boolean(userId),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  }),
+})
+
+const createConversationMessageService = useMutation<
+  Message,
+  CreateConversationMessageVariables
+>({
+  query: ({ conversationId, input }: CreateConversationMessageVariables) => ({
+    url: `/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    method: "POST",
+    body: createRoomMessageSchema.parse(input),
+    schema: messageSchema,
+  }),
+  invalidates: (_message, { conversationId }) => [
+    chatQueryKeys.messages(conversationId),
+    chatQueryKeys.conversation(conversationId),
+    chatQueryKeys.conversations,
+  ],
+})
+
+const useUsers = createQueryService(usersService)
+const useConversations = createQueryService(conversationsService)
+const useConversation = createQueryService(conversationService)
+const useConversationMessages = createQueryService(messagesService)
+const useCurrentUser = createQueryService(currentUserService)
+const useCreateConversationMessage = createMutationService(
+  createConversationMessageService
+)
+
+export function useUsersQuery(enabled = true, limit = 50) {
+  return useUsers({ enabled, limit })
+}
+
+export function useConversationsQuery(enabled = true, limit = 50) {
+  return useConversations({ enabled, limit })
+}
+
+export function useConversationQuery(conversationId: string, enabled = true) {
+  return useConversation({ conversationId, enabled })
 }
 
 export function useConversationMessagesQuery(
@@ -123,42 +240,20 @@ export function useConversationMessagesQuery(
   enabled = true,
   limit = 80
 ) {
-  return useQuery({
-    queryKey: chatQueryKeys.messages(conversationId),
-    queryFn: () => listConversationMessages(conversationId, limit),
-    enabled: enabled && Boolean(conversationId),
-    retry: false,
-    staleTime: 30_000,
-  })
+  return useConversationMessages({ conversationId, enabled, limit })
 }
 
 export function useCreateConversationMessageMutation(conversationId: string) {
-  const queryClient = useQueryClient()
+  const [trigger, state] = useCreateConversationMessage()
 
-  return useMutation({
-    mutationFn: (input: CreateRoomMessageInput) =>
-      createConversationMessage(conversationId, input),
-    onSuccess: (message) => {
-      queryClient.setQueryData<Message[]>(
-        chatQueryKeys.messages(conversationId),
-        (current = []) => mergeMessageResults(current, [message])
-      )
-      queryClient.setQueryData<ConversationDetails>(
-        chatQueryKeys.conversation(conversationId),
-        (current) =>
-          current
-            ? {
-              ...current,
-              lastMessage: message,
-              updatedAt: message.createdAt,
-            }
-            : current
-      )
-      void queryClient.invalidateQueries({
-        queryKey: chatQueryKeys.conversations,
-      })
-    },
-  })
+  return [
+    (input: CreateRoomMessageInput) => trigger({ conversationId, input }),
+    state,
+  ] as const
+}
+
+export function useCurrentUserQuery(enabled: boolean, userId?: string) {
+  return useCurrentUser({ enabled, userId })
 }
 
 export function mergeMessageResults(current: Message[], incoming: Message[]) {
@@ -174,86 +269,21 @@ export function mergeMessageResults(current: Message[], incoming: Message[]) {
   )
 }
 
-function getApiBaseUrl() {
-  return apiBaseUrl ?? "http://localhost:5050"
-}
-
-function withQuery(path: string, params?: RequestOptions["params"]) {
-  if (!params) {
-    return path
-  }
-
-  const search = new URLSearchParams()
-
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== null && value !== undefined) {
-      search.set(key, String(value))
-    }
-  }
-
-  const query = search.toString()
-
-  return query ? `${path}?${query}` : path
-}
-
-function refreshAuthentication() {
-  if (authRefreshRequest) return authRefreshRequest
-
-  authRefreshRequest = fetch("/auth/me", {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-    },
-  }).finally(() => {
-    authRefreshRequest = null
-  })
-
-  return authRefreshRequest
-}
-
 async function request<T>(
   path: string,
   schema: ZodType<T>,
   options: RequestOptions = {}
 ) {
-  const targetPath = withQuery(path, options.params)
-  const url = options.proxy
-    ? targetPath
-    : new URL(targetPath, getApiBaseUrl()).toString()
-  const send = () =>
-    fetch(url, {
-      method: options.method ?? "GET",
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-      },
-      body: options.body ? JSON.stringify(options.body) : undefined,
-      cache: "no-store",
-    })
-
-  let response = await send()
-
-  if (response.status === 401) {
-    const authResponse = await refreshAuthentication()
-
-    if (authResponse.ok) {
-      // The auth route owns refresh-token rotation. Retry this API call once.
-      response = await send()
-    } else if (authResponse.status === 401) {
-      window.location.replace("/")
-    }
-  }
-
-  const payload = (await response.json().catch(() => ({}))) as ApiEnvelope
-
-  if (!response.ok) {
-    throw new Error(payload.error ?? `Request failed with ${response.status}`)
-  }
-
-  return schema.parse(payload.data)
+  return caller<T>({
+    baseURL: options.proxy ? null : undefined,
+    url: path,
+    method: options.method ?? "GET",
+    body: options.body,
+    params: options.params,
+    schema,
+    cache: "no-store",
+    credentials: "include",
+  })
 }
 
 export async function listUsers(limit = 50): Promise<User[]> {
