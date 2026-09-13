@@ -1,4 +1,6 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
+
+import { apiBaseUrl } from "./lib/utils/environment"
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -8,6 +10,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-};
 
-export default nextConfig;
+  async rewrites() {
+    return [
+      {
+        source: "/proxy/chat/:path*",
+        destination: `${apiBaseUrl}/chat/:path*`,
+      },
+    ]
+  },
+}
+
+export default nextConfig

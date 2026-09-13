@@ -117,7 +117,8 @@ const usersService = useQuery<User[], ListQueryInput>({
   queryKey: ({ limit }: ListQueryInput) =>
     [...chatQueryKeys.users, { limit }] as const,
   query: ({ limit }: ListQueryInput) => ({
-    url: "/chat/users",
+    url: "/proxy/chat/users",
+    baseURL: null,
     method: "GET",
     params: { limit },
     schema: listUsersSchema,
@@ -135,7 +136,8 @@ const conversationsService = useQuery<ConversationDetails[], ListQueryInput>({
   queryKey: ({ limit }: ListQueryInput) =>
     [...chatQueryKeys.conversations, { limit }] as const,
   query: ({ limit }: ListQueryInput) => ({
-    url: "/chat/conversations",
+    url: "/proxy/chat/conversations",
+    baseURL: null,
     method: "GET",
     params: { limit },
     schema: listConversationsSchema,
@@ -156,7 +158,8 @@ const conversationService = useQuery<
   queryKey: ({ conversationId }: ConversationQueryInput) =>
     chatQueryKeys.conversation(conversationId),
   query: ({ conversationId }: ConversationQueryInput) => ({
-    url: `/chat/conversations/${encodeURIComponent(conversationId)}`,
+    url: `/proxy/chat/conversations/${encodeURIComponent(conversationId)}`,
+    baseURL: null,
     method: "GET",
     schema: conversationDetailsSchema,
     cache: "no-store",
@@ -173,7 +176,8 @@ const messagesService = useQuery<Message[], ConversationMessagesQueryInput>({
   queryKey: ({ conversationId }: ConversationMessagesQueryInput) =>
     chatQueryKeys.messages(conversationId),
   query: ({ conversationId, limit }: ConversationMessagesQueryInput) => ({
-    url: `/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    url: `/proxy/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    baseURL: null,
     method: "GET",
     params: { limit },
     schema: listMessagesSchema,
@@ -194,7 +198,8 @@ const currentUserService = useQuery<User, CurrentUserQueryInput>({
   queryKey: ({ userId }: CurrentUserQueryInput) =>
     [...currentUserQueryKey, userId] as const,
   query: {
-    url: "/chat/users/me",
+    url: "/proxy/chat/users/me",
+    baseURL: null,
     method: "GET",
     schema: userSchema,
     cache: "no-store",
@@ -211,7 +216,8 @@ const createConversationMessageService = useMutation<
   CreateConversationMessageVariables
 >({
   query: ({ conversationId, input }: CreateConversationMessageVariables) => ({
-    url: `/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    url: `/proxy/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
+    baseURL: null,
     method: "POST",
     body: createRoomMessageSchema.parse(input),
     schema: messageSchema,
@@ -223,7 +229,8 @@ const createConversationService = useMutation<
   CreateConversationInput
 >({
   query: (input: CreateConversationInput) => ({
-    url: "/chat/conversations",
+    url: "/proxy/chat/conversations",
+    baseURL: null,
     method: "POST",
     body: createConversationSchema.parse(input),
     schema: conversationSchema,
@@ -236,7 +243,8 @@ const addConversationMemberService = useMutation<
   AddConversationMemberVariables
 >({
   query: ({ conversationId, input }: AddConversationMemberVariables) => ({
-    url: `/chat/conversations/${encodeURIComponent(conversationId)}/members`,
+    url: `/proxy/chat/conversations/${encodeURIComponent(conversationId)}/members`,
+    baseURL: null,
     method: "POST",
     body: createConversationMemberSchema.parse(input),
     schema: conversationMemberSchema,
