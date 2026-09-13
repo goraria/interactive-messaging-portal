@@ -1,4 +1,4 @@
-import type { TokenRequest } from "ably"
+import type { TokenRequest } from "@gorth/structure/cores/ably/index"
 
 import type { UserRow } from "@/database/schema"
 import { getAbly } from "@/lib/ably"
