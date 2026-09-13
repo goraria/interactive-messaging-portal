@@ -21,7 +21,7 @@ export function getHeaderAuthUser(request: Request): AuthUserInput | null {
   )
 
   if (!id || !name) return null
-  return { id, name, email: email || undefined }
+  return { id, name, email: email || undefined, status: "active" }
 }
 
 export function getVerifiedUser(response: Response): AuthUserInput | null {
@@ -33,6 +33,7 @@ export function getVerifiedUser(response: Response): AuthUserInput | null {
     name: auth.user.name ?? auth.user.email.split("@")[0] ?? auth.user.email,
     email: auth.user.email,
     image: auth.user.image,
+    status: auth.user.status,
   }
 }
 

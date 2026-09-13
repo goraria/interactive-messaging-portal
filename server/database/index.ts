@@ -1,25 +1,11 @@
-// import "dotenv/config"
-import dotenv from "dotenv"
 // @ts-ignore
 import { Pool } from "@gorth/structure/cores/pg"
 import { drizzle } from "drizzle-orm/node-postgres"
 import * as schema from "@/database/schema"
+import { databaseUrl, pgPoolMax } from "@/lib/utils/environment"
 
-dotenv.config({
-  path: ".env.local",
-  override: true,
-  debug: false,
-  quiet: true,
-})
-
-// const database = drizzle(process.env.DATABASE_URL!)
-
-const databaseUrl = process.env.DATABASE_URL
 const defaultPoolMax = 5
-const poolMax = Number.parseInt(
-  process.env.PG_POOL_MAX ?? `${defaultPoolMax}`,
-  10
-)
+const poolMax = Number.parseInt(pgPoolMax, 10)
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required")
@@ -45,7 +31,7 @@ if (!globalForDatabase.pgPool) {
 }
 
 export const pool = globalForDatabase.pgPool
-export const database = drizzle(pool, { schema })
+export const database = drizzle({ client: pool })
 
 export type Database = typeof database
 

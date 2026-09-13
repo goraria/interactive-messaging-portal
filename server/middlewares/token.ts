@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
+import { isProduction } from "@/lib/utils/environment";
 
-const isProd = process.env.NODE_ENV === "production";
+const isProd = isProduction;
 
 // Tên cookie phong cách Clerk
 export const ACCESS_COOKIE = "access_token" // "__session";   // access token

@@ -5,6 +5,8 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { Button } from "@gorth/primitive/custom/button"
 import { MessageCircleOff, TriangleAlert } from "@gorth/primitive/cores/lucide"
+import { cn } from "@gorth/primitive/lib/utils"
+import { useLayout } from "@gorth/primitive/providers/layout"
 import { Broadcast } from "@/components/conversation/broadcast"
 import { ConversationState } from "@/components/conversation/conversation-state"
 import { MessHeader } from "@/components/conversation/mess-header"
@@ -16,6 +18,7 @@ import { readRouteId } from "@/lib/utils/formatter"
 import { useConversationQuery } from "@/services/chat"
 
 export default function ChatConversationPage() {
+  const { variant } = useLayout()
   const params = useParams<{ id?: string | string[] }>()
   const id = readRouteId(params.id)
   const auth = useAuth()
@@ -75,7 +78,13 @@ export default function ChatConversationPage() {
   )
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div
+      className={cn(
+        "flex h-full min-h-0 flex-col",
+        variant === "floating" && "gap-2 px-2 pb-2",
+        variant === "inset" && "overflow-hidden rounded-b-xl"
+      )}
+    >
       <MessHeader
         conversationName={conversationName}
         avatar={avatar}

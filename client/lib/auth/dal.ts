@@ -6,7 +6,7 @@ import {
   createHash,
   randomBytes,
 } from "node:crypto"
-import { v4 as uuidv4 } from "@gorth/structure/cores/uuid"
+import { v4 } from "@gorth/structure/cores/uuid"
 import { cache } from "react"
 import { cookies } from "next/headers"
 import type { NextRequest, NextResponse } from "next/server"
@@ -16,9 +16,18 @@ import {
   oauthRefreshTokenMaxAge,
   type OAuthTokenResponse,
 } from "@/lib/auth/oauth"
+import {
+  accessTokenCookie,
+  authMaxAge,
+  authSecret,
+  nodeEnv,
+  oauthCodeVerifierCookie,
+  oauthIssuerCookie,
+  oauthReturnToCookie,
+  oauthStateCookie,
+  refreshTokenCookie,
+} from "@/lib/utils/environment"
 
-export const gorthAccessTokenCookie = "gorth.access_token"
-export const gorthRefreshTokenCookie = "gorth.refresh_token"
 export const gorthSessionAppCookie = "gorth.session_app"
 
 const legacyAppAuthCookies = [
@@ -28,13 +37,26 @@ const legacyAppAuthCookies = [
   "gorth-app",
   "sb-access-auth-token",
   "sb-refresh-auth-token",
-]
-const authStateCookie = "app-auth-state"
-const authCodeVerifierCookie = "app-auth-code-verifier"
-const authReturnToCookie = "app-auth-return-to"
-const authIssuerCookie = "app-auth-issuer"
-const appSessionMaxAgeSeconds = Number(
-  process.env.APP_SESSION_MAX_AGE_SECONDS ?? 24 * 60 * 60
+] as const
+const authTransactionCookies = [
+  oauthStateCookie,
+  oauthCodeVerifierCookie,
+  oauthReturnToCookie,
+  oauthIssuerCookie,
+] as const
+const authTransactionMaxAgeSeconds = 5 * 60
+
+function getPositiveInteger(value: string | undefined, fallback: number) {
+  const parsedValue = Number(value)
+
+  return Number.isSafeInteger(parsedValue) && parsedValue > 0
+    ? parsedValue
+    : fallback
+}
+
+const appSessionMaxAgeSeconds = getPositiveInteger(
+  authMaxAge,
+  oauthRefreshTokenMaxAge
 )
 
 export interface AppSession {
@@ -44,6 +66,7 @@ export interface AppSession {
   sso_id_token?: string
   gorth_app?: Record<string, unknown>
   app_user_synced_at?: number
+  sso_verified_at?: number
   issued_at: number
   expires_at: number
 }
@@ -53,26 +76,21 @@ function createSessionUser(user: AuthUser): AuthUser {
     id: user.id,
     email: user.email,
     name: user.name,
+    username: user.username,
     image: user.image,
   }
 }
 
-function getSessionSecret() {
-  const secret = process.env.APP_SESSION_SECRET ?? process.env.SESSION_SECRET
-
-  if (!secret && process.env.NODE_ENV === "production") {
-    throw new Error("Missing APP_SESSION_SECRET")
-  }
-
-  return (
-    secret ??
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    "development-session-secret"
-  )
-}
+let sessionKey: Buffer | null = null
 
 function getSessionKey() {
-  return createHash("sha256").update(getSessionSecret()).digest()
+  if (!authSecret) {
+    throw new Error("NEXT_AUTH_SECRET is required")
+  }
+
+  sessionKey ??= createHash("sha256").update(authSecret).digest()
+
+  return sessionKey
 }
 
 function encodeBase64Url(value: Buffer) {
@@ -81,6 +99,46 @@ function encodeBase64Url(value: Buffer) {
 
 function decodeBase64Url(value: string) {
   return Buffer.from(value, "base64url")
+}
+
+function setResponseCookie(
+  response: NextResponse,
+  name: string,
+  value: string,
+  maxAge: number,
+  path = "/"
+) {
+  response.cookies.set(name, value, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: nodeEnv === "production",
+    path,
+    maxAge,
+  })
+}
+
+function clearResponseCookies(
+  response: NextResponse,
+  names: readonly string[],
+  path = "/"
+) {
+  for (const name of names) {
+    setResponseCookie(response, name, "", 0, path)
+  }
+}
+
+function setAuthTransactionCookie(
+  response: NextResponse,
+  name: (typeof authTransactionCookies)[number],
+  value: string
+) {
+  setResponseCookie(
+    response,
+    name,
+    value,
+    authTransactionMaxAgeSeconds,
+    "/auth"
+  )
 }
 
 function sealSession(session: AppSession) {
@@ -134,7 +192,8 @@ export function createAppSession(
   user: AuthUser,
   gorthApp?: Record<string, unknown>,
   ssoIdToken?: string,
-  appUserSyncedAt?: number
+  appUserSyncedAt?: number,
+  ssoVerifiedAt = Date.now()
 ): AppSession {
   const now = Date.now()
   const sessionUser = createSessionUser(user)
@@ -146,6 +205,7 @@ export function createAppSession(
     sso_id_token: ssoIdToken,
     gorth_app: gorthApp,
     app_user_synced_at: appUserSyncedAt,
+    sso_verified_at: ssoVerifiedAt,
     issued_at: now,
     expires_at: now + appSessionMaxAgeSeconds * 1000,
   }
@@ -168,54 +228,28 @@ export function setAppSessionCookie(
   response: NextResponse,
   session: AppSession
 ) {
-  response.cookies.set(gorthSessionAppCookie, sealSession(session), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: appSessionMaxAgeSeconds,
-  })
+  setResponseCookie(
+    response,
+    gorthSessionAppCookie,
+    sealSession(session),
+    appSessionMaxAgeSeconds
+  )
 
   return response
 }
 
 export function clearAppSessionCookie(response: NextResponse) {
-  response.cookies.set(gorthSessionAppCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  })
-  for (const cookieName of legacyAppAuthCookies) {
-    response.cookies.set(cookieName, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 0,
-    })
-  }
+  clearResponseCookies(response, [
+    gorthSessionAppCookie,
+    ...legacyAppAuthCookies,
+  ])
 
   return response
 }
 
 export function clearAppAuthCookies(response: NextResponse) {
   clearAppSessionCookie(response)
-  response.cookies.set(gorthAccessTokenCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  })
-  response.cookies.set(gorthRefreshTokenCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  })
+  clearResponseCookies(response, [accessTokenCookie, refreshTokenCookie])
 
   return response
 }
@@ -246,26 +280,19 @@ export function setAuthTokenCookies(
     token.refresh_token_expires_in ?? oauthRefreshTokenMaxAge
   )
 
-  response.cookies.set(gorthAccessTokenCookie, accessToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: accessTokenMaxAge,
-  })
-  response.cookies.set(gorthRefreshTokenCookie, refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: refreshTokenMaxAge,
-  })
+  setResponseCookie(response, accessTokenCookie, accessToken, accessTokenMaxAge)
+  setResponseCookie(
+    response,
+    refreshTokenCookie,
+    refreshToken,
+    refreshTokenMaxAge
+  )
 
   return response
 }
 
 export function createAuthState() {
-  return uuidv4()
+  return v4()
 }
 
 export function createOAuthCodeVerifier() {
@@ -277,13 +304,7 @@ export function createOAuthCodeChallenge(verifier: string) {
 }
 
 export function setAuthStateCookie(response: NextResponse, state: string) {
-  response.cookies.set(authStateCookie, state, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 5 * 60,
-  })
+  setAuthTransactionCookie(response, oauthStateCookie, state)
 
   return response
 }
@@ -292,13 +313,7 @@ export function setOAuthVerifierCookie(
   response: NextResponse,
   verifier: string
 ) {
-  response.cookies.set(authCodeVerifierCookie, verifier, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 5 * 60,
-  })
+  setAuthTransactionCookie(response, oauthCodeVerifierCookie, verifier)
 
   return response
 }
@@ -307,75 +322,37 @@ export function setAuthReturnToCookie(
   response: NextResponse,
   returnTo: string
 ) {
-  response.cookies.set(authReturnToCookie, returnTo, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 5 * 60,
-  })
+  setAuthTransactionCookie(response, oauthReturnToCookie, returnTo)
 
   return response
 }
 
 export function setAuthIssuerCookie(response: NextResponse, issuer: string) {
-  response.cookies.set(authIssuerCookie, issuer, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 5 * 60,
-  })
+  setAuthTransactionCookie(response, oauthIssuerCookie, issuer)
 
   return response
 }
 
 export function clearAuthStateCookie(response: NextResponse) {
-  response.cookies.set(authStateCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 0,
-  })
-  response.cookies.set(authCodeVerifierCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 0,
-  })
-  response.cookies.set(authReturnToCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 0,
-  })
-  response.cookies.set(authIssuerCookie, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/auth",
-    maxAge: 0,
-  })
+  clearResponseCookies(response, authTransactionCookies, "/auth")
+
   return response
 }
 
 export function isValidAuthState(request: NextRequest, state: string | null) {
-  const expected = request.cookies.get(authStateCookie)?.value
+  const expected = request.cookies.get(oauthStateCookie)?.value
 
   return Boolean(state && expected && state === expected)
 }
 
 export function getOAuthCodeVerifier(request: NextRequest) {
-  return request.cookies.get(authCodeVerifierCookie)?.value ?? null
+  return request.cookies.get(oauthCodeVerifierCookie)?.value ?? null
 }
 
 export function getAuthReturnTo(request: NextRequest) {
-  return request.cookies.get(authReturnToCookie)?.value ?? "/"
+  return request.cookies.get(oauthReturnToCookie)?.value ?? "/"
 }
 
 export function getAuthIssuer(request: NextRequest) {
-  return request.cookies.get(authIssuerCookie)?.value ?? null
+  return request.cookies.get(oauthIssuerCookie)?.value ?? null
 }

@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import { databaseUrl } from "./lib/utils/environment"
 
 dotenv.config({
+  path: ".env.local",
   override: false,
   debug: false,
   quiet: true,

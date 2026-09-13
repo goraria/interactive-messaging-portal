@@ -18,8 +18,10 @@ export async function syncUser(
     const user = await syncUserService({
       id: auth.user.id,
       name: auth.user.name ?? auth.user.email.split("@")[0] ?? auth.user.email,
+      username: auth.user.username,
       email: auth.user.email,
       image: auth.user.image,
+      status: auth.user.status,
     })
 
     return res.status(200).json({ data: user })
@@ -30,8 +32,4 @@ export async function syncUser(
 
 export function splat(_req: Request, res: Response) {
   return res.status(404).json({ error: "sso_owned_auth_route" })
-}
-
-export function me(_req: Request, res: Response) {
-  return res.status(401).json({ error: "sso_owned_auth_route" })
 }

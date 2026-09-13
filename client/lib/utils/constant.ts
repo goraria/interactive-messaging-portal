@@ -39,7 +39,6 @@ import {
   Info,
   AppWindow,
 } from "@gorth/primitive/cores/lucide"
-import { apiAuthUrl } from "@/lib/utils/environment"
 
 export const appGlobal = {
   name: "Interactive Messaging Portal",
@@ -251,7 +250,7 @@ export const messageSidebar = {
   navDropdown: [
     {
       title: "Account",
-      url: `${apiAuthUrl}/settings`,
+      url: "/account",
       icon: BadgeCheck,
     },
     {
@@ -503,7 +502,7 @@ export const settingSidebar = {
   navDropdown: [
     {
       title: "Account",
-      url: `${apiAuthUrl}/settings`,
+      url: "/account",
       icon: BadgeCheck,
     },
     {
@@ -710,7 +709,7 @@ export const sharedNavbar = {
   navDropdown: [
     {
       title: "Account",
-      url: `${apiAuthUrl}/settings`,
+      url: "/account",
       icon: BadgeCheck,
     },
     {

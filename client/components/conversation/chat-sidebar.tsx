@@ -28,6 +28,8 @@ import {
   CommandList,
 } from "@gorth/primitive/custom/command"
 import { NavUser } from "@gorth/primitive/modules/dashboard"
+import { cn } from "@gorth/primitive/lib/utils"
+import { useLayout } from "@gorth/primitive/providers/layout"
 import {
   Command as CommandIcon,
   MessageCircleOff,
@@ -38,7 +40,7 @@ import {
   X,
   type LucideIcon,
 } from "@gorth/primitive/cores/lucide"
-import { ConversationItem } from "@/components/conversation/message/conversation-item"
+import { ConversationItem } from "@/components/conversation/conversation-item"
 import { ConversationState } from "@/components/conversation/conversation-state"
 import type { ChatConversation } from "@/lib/utils/constant"
 import type { useAuth } from "@/hooks/use-auth"
@@ -90,6 +92,7 @@ export function ChatSidebar({
   auth,
   conversationsLoading = false,
   conversationsError = null,
+  className,
   ...props
 }: ChatSidebarProps) {
   const pathname = usePathname()
@@ -98,6 +101,7 @@ export function ChatSidebar({
   const [unreadOnly, setUnreadOnly] = React.useState(false)
   const [searching, setSearching] = React.useState(false)
   const { setOpen } = useSidebar()
+  const { collapsible, variant } = useLayout()
   const conversations = React.useMemo(
     () =>
       unreadOnly
@@ -108,9 +112,13 @@ export function ChatSidebar({
 
   return (
     <Sidebar
-      collapsible="icon"
-      className="overflow-hidden *:data-[sidebar=sidebar]:flex-row"
       {...props}
+      collapsible={collapsible}
+      variant={variant}
+      className={cn(
+        "overflow-hidden *:data-[sidebar=sidebar]:flex-row *:data-[sidebar=sidebar]:overflow-hidden",
+        className
+      )}
     >
       <Sidebar
         collapsible="none"

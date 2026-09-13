@@ -1,23 +1,34 @@
 import { desc, eq, or } from "drizzle-orm"
 import { database } from "@/database"
-import { usersTable, type UserRow } from "@/database/schema"
-import type { CreateUserInput, UpdateUserInput } from "@/schemas/chat"
+import { usersTable } from "@/database/schema"
+import {
+  authUserSchema,
+  type AuthUserInput,
+  type CreateUserInput,
+  type UpdateUserInput,
+} from "@/schemas/chat"
 import { toUser } from "@/lib/utils/chat"
 import { createServiceError } from "@/lib/utils/service"
 
-export interface AuthUserInput {
-  id: string
-  name: string
-  email?: string
-  image?: string | null
-}
+export type { AuthUserInput } from "@/schemas/chat"
 
 function fallbackEmail(externalUserId: string) {
   return `${encodeURIComponent(externalUserId)}@local.gorth.chat`
 }
 
-export async function ensureUser(user: AuthUserInput) {
+export async function findUserByExternalId(externalUserId: string) {
+  const [user] = await database
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.externalUserId, externalUserId))
+    .limit(1)
+
+  return user ?? null
+}
+
+export async function ensureUser(rawUser: AuthUserInput) {
   try {
+    const user = authUserSchema.parse(rawUser)
     const email = user.email ?? fallbackEmail(user.id)
     const [existing] = await database
       .select()
@@ -38,9 +49,12 @@ export async function ensureUser(user: AuthUserInput) {
         .set({
           externalUserId: existing.externalUserId ?? user.id,
           name: user.name,
+          username: user.username ?? existing.username,
           email,
           image: user.image === undefined ? existing.image : user.image,
+          status: user.status,
           lastSeenAt: new Date(),
+          syncedAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(usersTable.id, existing.id))
@@ -54,9 +68,12 @@ export async function ensureUser(user: AuthUserInput) {
       .values({
         externalUserId: user.id,
         name: user.name,
+        username: user.username ?? null,
         email,
         image: user.image ?? null,
+        status: user.status,
         lastSeenAt: new Date(),
+        syncedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -93,7 +110,8 @@ export async function syncUser(user: AuthUserInput) {
 
 export async function getCurrentUser(user: AuthUserInput) {
   try {
-    return toUser(await getCurrentUserRow(user))
+    const currentUser = await findUserByExternalId(user.id)
+    return currentUser ? toUser(currentUser) : null
   } catch (error) {
     throw error
   }

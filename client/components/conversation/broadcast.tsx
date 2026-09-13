@@ -16,9 +16,10 @@ import {
   ImagePlus,
   MessageCircleOff,
   Paperclip,
-  Send,
+  SendHorizonal,
 } from "@gorth/primitive/cores/lucide"
 import { Spinner } from "@gorth/primitive/pattern/spinner"
+import { useLayout } from "@gorth/primitive/providers/layout"
 import { type ChatMessage, useBroadcast } from "@/hooks/use-conversation"
 import { Message } from "@/components/conversation/message"
 import { ConversationState } from "@/components/conversation/conversation-state"
@@ -46,15 +47,20 @@ export function Broadcast({
   onSignIn,
   className,
 }: BroadcastProps) {
+  const { variant } = useLayout()
   const [value, setValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const attachmentInputRef = useRef<HTMLInputElement>(null)
-  const { messages, loading, sending, error, sendMessage } = useBroadcast({
-    conversationId,
-    username,
-    onMessage,
-  })
+  const {
+    messages,
+    loading,
+    sending,
+    error,
+    realtimeReady,
+    realtimeError,
+    sendMessage,
+  } = useBroadcast({ conversationId, username, onMessage })
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -62,6 +68,8 @@ export function Broadcast({
       onSignIn?.()
       return
     }
+
+    if (!realtimeReady) return
 
     const sent = await sendMessage(value)
 
@@ -74,13 +82,23 @@ export function Broadcast({
   return (
     <section
       className={cn(
-        "bg-background flex min-h-0 flex-1 flex-col overflow-hidden border",
+        "flex min-h-0 flex-1 flex-col",
+        variant === "sidebar" && "bg-background border-x border-b",
+        variant === "floating" && "gap-2 bg-transparent",
+        variant === "inset" &&
+        "bg-background overflow-hidden rounded-b-xl border-x border-b",
         className
       )}
     >
-      <MessageScrollerProvider>
-        <MessageScroller className="min-h-0 flex-1">
-          <MessageScrollerViewport>
+      <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+        <MessageScroller
+          className={cn(
+            "min-h-0 flex-1",
+            variant === "floating" &&
+            "bg-background overflow-hidden rounded-lg shadow-sm ring-1 ring-sidebar-border"
+          )}
+        >
+          <MessageScrollerViewport className="min-h-0 flex-1">
             <MessageScrollerContent className="gap-0 p-6">
               {loading ? (
                 <ConversationState loading />
@@ -100,7 +118,6 @@ export function Broadcast({
                     <MessageScrollerItem
                       key={message.id}
                       messageId={message.id}
-                      scrollAnchor={isOwnMessage}
                     >
                       <Message
                         message={message}
@@ -126,7 +143,14 @@ export function Broadcast({
       </MessageScrollerProvider>
 
       {error ? (
-        <div className="bg-destructive/10 text-destructive border-t px-4 py-2 text-sm">
+        <div
+          className={cn(
+            "bg-destructive/10 text-destructive px-4 py-2 text-sm",
+            variant !== "floating" && "border-t",
+            variant === "floating" &&
+            "rounded-lg ring-1 ring-destructive/30"
+          )}
+        >
           {error}
         </div>
       ) : null}
@@ -134,7 +158,13 @@ export function Broadcast({
       <form
         onSubmit={handleSubmit}
         autoComplete="off"
-        className="flex items-center gap-1 border-t p-3"
+        className={cn(
+          "bg-background flex shrink-0 items-center gap-1 p-3",
+          variant === "sidebar" && "border-t",
+          variant === "floating" &&
+          "rounded-lg shadow-sm ring-1 ring-sidebar-border",
+          variant === "inset" && "rounded-b-xl border-t"
+        )}
       >
         <input
           ref={imageInputRef}
@@ -183,19 +213,27 @@ export function Broadcast({
           spellCheck={false}
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder={canSend ? "Type your messages..." : "Sign in to reply"}
-          disabled={sending || !canSend}
+          placeholder={
+            !canSend
+              ? "Sign in to reply"
+              : realtimeReady
+                ? "Type your messages..."
+                : "Connecting realtime..."
+          }
+          disabled={sending || !canSend || !realtimeReady}
           maxLength={4000}
           className="text-primary min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
         <Button
           type="submit"
-          variant="ghost"
+          variant={realtimeError ? "destructive" : "ghost"}
           size="icon"
           aria-label={canSend ? "Send message" : "Sign in"}
-          disabled={sending || (canSend && !value.trim())}
+          disabled={
+            sending || (canSend && (!realtimeReady || !value.trim()))
+          }
         >
-          {sending ? <Spinner variant="infinite" size={16} /> : <Send />}
+          <SendHorizonal />
         </Button>
       </form>
     </section>

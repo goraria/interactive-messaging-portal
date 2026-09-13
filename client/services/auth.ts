@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback } from "react"
-import type { AxiosResponse } from "axios"
+import type { AxiosResponse } from "@gorth/structure/cores/axios"
 
 import {
   caller,
@@ -103,7 +103,7 @@ export function useAuthAccount() {
 
   return {
     account: query.data ?? null,
-    loading: query.isLoading || query.isFetching,
+    loading: query.isLoading,
     error: query.error,
     refresh,
   }

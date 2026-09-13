@@ -1,8 +1,14 @@
 import "server-only"
 
 import { createHash } from "node:crypto"
-import { apiBaseUrl, routes, ssoOAuthClientId } from "@/lib/utils/environment"
+import { ssoOAuthClientId } from "@/lib/utils/environment"
 import type { AuthUser } from "@/lib/utils/interface"
+import {
+  getRouteOAuthUserInfo,
+  refreshRouteOAuthToken,
+  revokeRouteOAuthToken,
+  syncRouteAppUser,
+} from "@/services/route"
 
 export const oauthAccessTokenMaxAge = 60 * 60
 export const oauthRefreshTokenMaxAge = 60 * 60 * 24 * 30
@@ -28,6 +34,7 @@ interface OAuthUserInfoResponse {
   email?: string
   email_verified?: boolean
   name?: string
+  preferred_username?: string | null
   picture?: string
   updated_at?: string
 }
@@ -40,38 +47,21 @@ export interface OAuthUserInfoResult {
 
 const refreshRequests = new Map<string, Promise<OAuthTokenResponse>>()
 
-function getSsoOrigin() {
-  return new URL(routes.login).origin
-}
-
 function getTokenFingerprint(token: string) {
   return createHash("sha256").update(token).digest("hex")
 }
 
-export async function readOAuthError(response: Response) {
-  try {
-    return (await response.json()) as OAuthErrorPayload
-  } catch {
-    return null
-  }
+export function readOAuthError(payload: unknown) {
+  return payload && typeof payload === "object"
+    ? (payload as OAuthErrorPayload)
+    : null
 }
 
 export async function syncAppUser(accessToken: string) {
-  if (!apiBaseUrl) {
-    throw new Error("missing_app_server_url")
-  }
-
-  let response: Response
+  let response: Awaited<ReturnType<typeof syncRouteAppUser>>
 
   try {
-    response = await fetch(new URL("/auth/sync-user", apiBaseUrl), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    })
+    response = await syncRouteAppUser(accessToken)
   } catch (error) {
     console.error("[auth] Chat user sync request failed", {
       endpoint: "/auth/sync-user",
@@ -80,8 +70,8 @@ export async function syncAppUser(accessToken: string) {
     throw new Error("app_user_sync_failed")
   }
 
-  if (!response.ok) {
-    const detail = await readOAuthError(response)
+  if (response.status < 200 || response.status >= 300) {
+    const detail = readOAuthError(response.data)
     console.error("[auth] Chat user sync failed", {
       endpoint: "/auth/sync-user",
       status: response.status,
@@ -137,27 +127,18 @@ export function shouldRefreshCredentials(
 export async function getOAuthUserInfo(
   accessToken: string
 ): Promise<OAuthUserInfoResult> {
-  const response = await fetch(
-    new URL("/auth/oauth2/userinfo", getSsoOrigin()),
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-    }
-  )
+  const response =
+    await getRouteOAuthUserInfo<OAuthUserInfoResponse>(accessToken)
 
-  if (!response.ok) {
+  if (response.status < 200 || response.status >= 300) {
     return {
       user: null,
       status: response.status,
-      error: await readOAuthError(response),
+      error: readOAuthError(response.data),
     }
   }
 
-  const userInfo = (await response.json()) as OAuthUserInfoResponse
+  const userInfo = response.data
   if (!userInfo.sub || !userInfo.email) {
     return {
       user: null,
@@ -176,6 +157,7 @@ export async function getOAuthUserInfo(
       id: userInfo.sub,
       email: userInfo.email,
       name: userInfo.name ?? userInfo.email,
+      username: userInfo.preferred_username ?? null,
       image: userInfo.picture ?? null,
     },
   }
@@ -191,18 +173,10 @@ async function requestTokenRefresh(
   body.set("refresh_token", refreshToken)
   body.set("resource", resource)
 
-  const response = await fetch(new URL("/auth/oauth2/token", getSsoOrigin()), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body,
-    cache: "no-store",
-  })
+  const response = await refreshRouteOAuthToken<OAuthTokenResponse>(body)
 
-  if (!response.ok) {
-    const detail = await readOAuthError(response)
+  if (response.status < 200 || response.status >= 300) {
+    const detail = readOAuthError(response.data)
     throw Object.assign(new Error("oauth_refresh_failed"), {
       status: response.status,
       oauthError: detail?.error,
@@ -210,7 +184,7 @@ async function requestTokenRefresh(
     })
   }
 
-  const token = (await response.json()) as OAuthTokenResponse
+  const token = response.data
   if (token.token_type?.toLowerCase() !== "bearer" || !token.access_token) {
     throw new Error("invalid_oauth_refresh_response")
   }
@@ -239,18 +213,10 @@ export async function revokeOAuthToken(
   body.set("token", token)
   body.set("token_type_hint", tokenType)
 
-  const response = await fetch(new URL("/auth/oauth2/revoke", getSsoOrigin()), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body,
-    cache: "no-store",
-  })
+  const response = await revokeRouteOAuthToken(body)
 
-  if (!response.ok) {
-    const detail = await readOAuthError(response)
+  if (response.status < 200 || response.status >= 300) {
+    const detail = readOAuthError(response.data)
     console.error("[auth] SSO token revocation failed", {
       endpoint: "/auth/oauth2/revoke",
       status: response.status,

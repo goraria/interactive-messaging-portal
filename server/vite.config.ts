@@ -22,7 +22,7 @@ export default defineConfig({
   plugins: [developmentServerPlugin],
 
   build: {
-    ssr: "app/main.ts",
+    ssr: "app/index.ts",
     outDir: "dist",
     target: "node22",
     sourcemap: true,

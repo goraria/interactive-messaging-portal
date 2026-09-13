@@ -1,5 +1,5 @@
 import axios from "@gorth/structure/cores/axios"
-import { toast } from "@gorth/primitive/cores/sonner"
+import { toast } from "@gorth/primitive/custom/toast"
 import { apiBaseUrl } from "@/lib/utils/environment"
 import {
   getPayloadMessage,
@@ -262,7 +262,7 @@ export function notify(
   }
 
   const toastApi = getToast()
-  toastApi?.[kind](message)
+  toastApi?.add({ type: kind, description: message })
 }
 
 export function startLoadingToast(toastConfig: CallerToastConfig | undefined) {
@@ -273,16 +273,16 @@ export function startLoadingToast(toastConfig: CallerToastConfig | undefined) {
   }
 
   const toastApi = getToast()
-  return toastApi?.loading(message) ?? null
+  return toastApi?.add({ type: "loading", description: message }) ?? null
 }
 
-export function dismissToast(id: string | number | null) {
+export function dismissToast(id: string | null) {
   if (!id) {
     return
   }
 
   const toastApi = getToast()
-  toastApi?.dismiss(id)
+  toastApi?.close(id)
 }
 
 export {

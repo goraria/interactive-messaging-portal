@@ -1,5 +1,6 @@
 import { createServerClient } from '@gorth/structure/cores/supabase/ssr'
 import { Request, Response } from 'express'
+import { supabaseAnonKey, supabaseUrl } from "@/lib/utils/environment"
 // import { cookies } from 'next/headers'
 
 /**
@@ -11,8 +12,8 @@ export async function createServer(req: Request, res: Response) {
   // const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-    process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -39,8 +40,8 @@ export async function createServer(req: Request, res: Response) {
 
 // function createSupabaseServerClient(req: Request, res: Response) {
 //   return createServerClient(
-//     process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-//     process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+//     supabaseUrl,
+//     supabaseAnonKey,
 //     {
 //       cookies: {
 //         getAll: () => {
@@ -67,8 +68,8 @@ export async function createServer(req: Request, res: Response) {
 //  */
 // export function createClient(req: Request, res: Response) {
 //   return createSupabaseClient(
-//     process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-//     process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+//     supabaseUrl,
+//     supabaseAnonKey,
 //     {
 //       auth: {
 //         autoRefreshToken: true,
@@ -98,8 +99,8 @@ export async function createServer(req: Request, res: Response) {
 //   if (!accessToken) return createClient();
 
 //   const supabase = createServerClient(
-//     process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-//     process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+//     supabaseUrl,
+//     supabaseAnonKey,
 //     {
 //       auth: {
 //         flowType: 'pkce',
@@ -137,8 +138,8 @@ export async function createServer(req: Request, res: Response) {
 //   refreshToken: string
 // ) {
 //   const supabase = createServerClient(
-//     process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-//     process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+//     supabaseUrl,
+//     supabaseAnonKey,
 //     {
 //       auth: {
 //         flowType: 'pkce',

@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback } from "@gorth/primitive/custom/avatar"
 import { Badge } from "@gorth/primitive/custom/badge"
 import { Button } from "@gorth/primitive/custom/button"
 import { Card } from "@gorth/primitive/default/card"
-import { Spinner } from "@gorth/primitive/pattern/spinner"
+import { LoadingScreen } from "@/features/shared/loading"
 import { useAuth } from "@/hooks/use-auth"
 
 const features = [
@@ -38,7 +38,13 @@ const features = [
   },
 ]
 
-const highlights = ["Realtime", "Focused", "Private", "Encrypted", "Cross-device"]
+const highlights = [
+  "Realtime",
+  "Focused",
+  "Private",
+  "Encrypted",
+  "Cross-device",
+]
 
 export default function LandingPage() {
   const router = useRouter()
@@ -51,11 +57,7 @@ export default function LandingPage() {
   }, [authenticated, loading, router])
 
   if (loading || authenticated) {
-    return (
-      <div className="flex min-h-[60svh] items-center justify-center">
-        <Spinner variant="infinite" size={32} />
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   return (
@@ -84,8 +86,8 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-muted-foreground mt-8 max-w-xl text-lg leading-8 text-pretty">
-                A focused place to talk, share, and keep in touch with the people
-                who matter.
+                A focused place to talk, share, and keep in touch with the
+                people who matter.
               </p>
 
               <div id="start" className="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -120,7 +122,9 @@ export default function LandingPage() {
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">Japtor Community</p>
-                      <p className="text-muted-foreground text-xs">Realtime connected</p>
+                      <p className="text-muted-foreground text-xs">
+                        Realtime connected
+                      </p>
                     </div>
                     <span className="bg-accent size-2 rounded-full" />
                   </div>
@@ -146,7 +150,10 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  <Button className="mt-6 w-full" onClick={() => login("/chat")}>
+                  <Button
+                    className="mt-6 w-full"
+                    onClick={() => login("/chat")}
+                  >
                     Open your inbox <ArrowRight data-icon="inline-end" />
                   </Button>
                 </div>
@@ -163,7 +170,10 @@ export default function LandingPage() {
         </section>
       </Card>
 
-      <Card id="how-it-works" className="border-border rounded-2xl border p-6 ring-0">
+      <Card
+        id="how-it-works"
+        className="border-border rounded-2xl border p-6 ring-0"
+      >
         <div>
           <p className="text-muted-foreground font-mono text-xs tracking-[0.2em] uppercase">
             Built for conversation
@@ -172,7 +182,9 @@ export default function LandingPage() {
             {features.map(({ icon: Icon, title, description }) => (
               <article key={title} className="border-border border-l-2 pl-5">
                 <Icon className="text-accent size-5" />
-                <h2 className="mt-5 text-lg font-medium tracking-tight">{title}</h2>
+                <h2 className="mt-5 text-lg font-medium tracking-tight">
+                  {title}
+                </h2>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-6">
                   {description}
                 </p>
@@ -194,8 +206,8 @@ export default function LandingPage() {
           </div>
           <div>
             <p className="text-muted-foreground max-w-xl text-lg leading-8">
-              Find people, continue discussions from one inbox, and stay in touch
-              without letting the app get in your way.
+              Find people, continue discussions from one inbox, and stay in
+              touch without letting the app get in your way.
             </p>
             <div className="mt-8 flex flex-wrap gap-2">
               {highlights.map((highlight) => (

@@ -30,6 +30,7 @@
     "dist",
     ".express",
     "app/index.ts",
-    "lib/prisma/**"
+    "lib/prisma/**",
+    "lib/supabase/**"
   ]
 }

@@ -5,6 +5,11 @@ import {
   type Session,
 } from "@gorth/structure/cores/supabase/index"
 import type { Request, Response, NextFunction } from 'express'
+import {
+  isProduction,
+  supabaseAnonKey,
+  supabaseUrl,
+} from "@/lib/utils/environment"
 
 // Extend Express Request type to include Supabase properties
 declare global {
@@ -33,8 +38,8 @@ export async function supabaseSessionMiddleware(
   try {
     // Always create a new client on each request (similar to Next.js approach)
     const supabase = createServerClient(
-      process.env.EXPRESS_PUBLIC_SUPABASE_URL!,
-      process.env.EXPRESS_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         auth: {
           flowType: 'pkce',
@@ -77,16 +82,16 @@ export async function supabaseSessionMiddleware(
           // Update cookies with new tokens
           res.cookie('access_token', refreshData.session.access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax',
             maxAge: 55 * 60 * 1000, // 55 minutes
           })
 
           if (refreshData.session.refresh_token) {
             res.cookie('refresh_token', refreshData.session.refresh_token, {
               httpOnly: true,
-              secure: process.env.NODE_ENV === 'production',
-              sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+              secure: isProduction,
+              sameSite: isProduction ? 'none' : 'lax',
               maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
             })
           }
@@ -137,7 +142,7 @@ export function requireAuth(
  * 
  * Usage:
  * import { optionalAuth } from '@/lib/supabase/middleware'
- * router.get('/api/data', optionalAuth, (req, res) => {
+ * router.get('/data', optionalAuth, (req, res) => {
  *   const user = req.user // may be null
  * })
  */

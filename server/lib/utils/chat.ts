@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto"
+import { v4 } from "@gorth/structure/cores/uuid"
 import type {
   ConversationMemberRow,
   ConversationRow,
@@ -17,7 +17,7 @@ export function slugifyConversation(value: string) {
     .replace(/^-+|-+$/g, "")
     .slice(0, 120)
 
-  return slug || `conversation-${randomUUID()}`
+  return slug || `conversation-${v4()}`
 }
 
 export function toUser(row: UserRow) {
@@ -25,9 +25,13 @@ export function toUser(row: UserRow) {
     id: row.id,
     externalUserId: row.externalUserId,
     name: row.name,
+    username: row.username,
+    role: row.role,
+    status: row.status,
     email: row.email,
     image: row.image,
     lastSeenAt: row.lastSeenAt?.toISOString() ?? null,
+    syncedAt: row.syncedAt.toISOString(),
     metadata: row.metadata,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),

@@ -1,34 +1,43 @@
 import z from "@gorth/structure/cores/zod"
+import { createSchemaFactory } from "drizzle-orm/zod"
+import {
+  conversationMemberRoleOptions,
+  conversationMembersTable,
+  conversationsTable,
+  conversationTypeOptions,
+  messageAttachmentsTable,
+  messageDeliveryStatusOptions,
+  messageReactionsTable,
+  messageReceiptsTable,
+  messagesTable,
+  messageTypeOptions,
+  usersTable,
+} from "@/database/schema"
 
-export const conversationTypeOptions = [
-  "direct",
-  "group",
-  "channel",
-] as const
+export {
+  conversationMemberRoleOptions,
+  conversationTypeOptions,
+  messageDeliveryStatusOptions,
+  messageTypeOptions,
+}
 
-export const conversationMemberRoleOptions = [
-  "owner",
-  "admin",
-  "member",
-] as const
+const { createInsertSchema, createUpdateSchema } = createSchemaFactory({
+  zodInstance: z,
+  coerce: { date: true },
+})
 
-export const messageTypeOptions = [
-  "text",
-  "system",
-  "image",
-  "file",
-] as const
-
-export const messageDeliveryStatusOptions = [
-  "sent",
-  "delivered",
-  "read",
+export const userStatusOptions = [
+  "active",
+  "inactive",
+  "suspended",
+  "deleted",
 ] as const
 
 export const conversationTypeSchema = z.enum(conversationTypeOptions)
 export const conversationMemberRoleSchema = z.enum(conversationMemberRoleOptions)
 export const messageTypeSchema = z.enum(messageTypeOptions)
 export const messageDeliveryStatusSchema = z.enum(messageDeliveryStatusOptions)
+export const userStatusSchema = z.enum(userStatusOptions)
 
 export const uuidSchema = z.string().uuid()
 export const dateTimeSchema = z.string().datetime()
@@ -41,7 +50,9 @@ export const userSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   image: z.string().nullable(),
+  status: userStatusSchema,
   lastSeenAt: nullableDateTimeSchema,
+  syncedAt: dateTimeSchema,
   metadata: metadataSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
@@ -126,86 +137,152 @@ export const messageReceiptSchema = z.object({
   updatedAt: dateTimeSchema,
 })
 
-export const createUserSchema = z.object({
-  externalUserId: z.string().optional(),
-  name: z.string().min(1),
-  email: z.string().email(),
-  image: z.string().optional(),
-  metadata: metadataSchema.optional(),
+const userInsertSchema = createInsertSchema(usersTable, {
+  externalUserId: (schema) => schema.min(1),
+  name: (schema) => schema.min(1),
+  email: (schema) => schema.email(),
 })
 
-export const updateUserSchema = createUserSchema.partial().extend({
-  lastSeenAt: z.coerce.date().nullable().optional(),
+const authUserProjectionSchema = userInsertSchema.pick({
+  externalUserId: true,
+  name: true,
+  username: true,
+  email: true,
+  image: true,
+  status: true,
 })
 
-export const createConversationSchema = z.object({
-  slug: z.string().optional(),
-  title: z.string().optional(),
-  type: conversationTypeSchema.default("direct"),
-  createdById: uuidSchema.optional(),
-  metadata: metadataSchema.optional(),
+export const authUserSchema = z.object({
+  id: authUserProjectionSchema.shape.externalUserId,
+  name: authUserProjectionSchema.shape.name,
+  username: authUserProjectionSchema.shape.username,
+  email: authUserProjectionSchema.shape.email.optional(),
+  image: authUserProjectionSchema.shape.image,
+  status: authUserProjectionSchema.shape.status,
 })
 
-export const updateConversationSchema = createConversationSchema.partial().extend({
-  archivedAt: z.coerce.date().nullable().optional(),
+export const createUserSchema = userInsertSchema.pick({
+  externalUserId: true,
+  name: true,
+  email: true,
+  image: true,
+  metadata: true,
 })
 
-export const createConversationMemberSchema = z.object({
-  userId: uuidSchema,
-  role: conversationMemberRoleSchema.default("member"),
+export const updateUserSchema = createUpdateSchema(usersTable, {
+  externalUserId: (schema) => schema.min(1),
+  name: (schema) => schema.min(1),
+  email: (schema) => schema.email(),
+}).pick({
+  externalUserId: true,
+  name: true,
+  email: true,
+  image: true,
+  metadata: true,
+  lastSeenAt: true,
 })
 
-export const updateConversationMemberSchema = z.object({
-  role: conversationMemberRoleSchema.optional(),
-  lastReadMessageId: uuidSchema.nullable().optional(),
-  mutedUntil: z.coerce.date().nullable().optional(),
-  leftAt: z.coerce.date().nullable().optional(),
+export const createConversationSchema = createInsertSchema(
+  conversationsTable
+)
+  .pick({
+    slug: true,
+    title: true,
+    type: true,
+    createdById: true,
+    metadata: true,
+  })
+  .partial({ slug: true })
+
+export const updateConversationSchema = createUpdateSchema(
+  conversationsTable
+).pick({
+  slug: true,
+  title: true,
+  type: true,
+  createdById: true,
+  metadata: true,
+  archivedAt: true,
 })
 
-export const createMessageSchema = z.object({
-  senderId: uuidSchema,
-  content: z.string().min(1).max(4000),
-  type: messageTypeSchema.default("text"),
-  metadata: metadataSchema.optional(),
+export const createConversationMemberSchema = createInsertSchema(
+  conversationMembersTable
+).pick({ userId: true, role: true })
+
+export const updateConversationMemberSchema = createUpdateSchema(
+  conversationMembersTable
+).pick({
+  role: true,
+  lastReadMessageId: true,
+  mutedUntil: true,
+  leftAt: true,
 })
 
-export const createRoomMessageSchema = z.object({
-  content: z.string().min(1).max(4000),
-  metadata: metadataSchema.optional(),
+const messageInsertSchema = createInsertSchema(messagesTable, {
+  content: (schema) => schema.min(1).max(4000),
 })
 
-export const updateMessageSchema = z.object({
-  content: z.string().min(1).max(4000).optional(),
-  type: messageTypeSchema.optional(),
-  metadata: metadataSchema.optional(),
-  deletedAt: z.coerce.date().nullable().optional(),
+export const createMessageSchema = messageInsertSchema.pick({
+  senderId: true,
+  content: true,
+  type: true,
+  metadata: true,
 })
 
-export const createMessageAttachmentSchema = z.object({
-  fileName: z.string().min(1),
-  fileUrl: z.string().min(1),
-  mimeType: z.string().optional(),
-  sizeBytes: z.string().optional(),
-  metadata: metadataSchema.optional(),
+export const createRoomMessageSchema = messageInsertSchema.pick({
+  content: true,
+  metadata: true,
 })
 
-export const updateMessageAttachmentSchema = createMessageAttachmentSchema.partial()
-
-export const createMessageReactionSchema = z.object({
-  userId: uuidSchema,
-  emoji: z.string().min(1),
+export const updateMessageSchema = createUpdateSchema(messagesTable, {
+  content: (schema) => schema.min(1).max(4000),
+}).pick({
+  content: true,
+  type: true,
+  metadata: true,
+  deletedAt: true,
 })
 
-export const createMessageReceiptSchema = z.object({
-  userId: uuidSchema,
-  status: messageDeliveryStatusSchema.default("delivered"),
+export const createMessageAttachmentSchema = createInsertSchema(
+  messageAttachmentsTable,
+  {
+    fileName: (schema) => schema.min(1),
+    fileUrl: (schema) => schema.min(1),
+  }
+).pick({
+  fileName: true,
+  fileUrl: true,
+  mimeType: true,
+  sizeBytes: true,
+  metadata: true,
 })
 
-export const updateMessageReceiptSchema = z.object({
-  status: messageDeliveryStatusSchema.optional(),
-  deliveredAt: z.coerce.date().nullable().optional(),
-  readAt: z.coerce.date().nullable().optional(),
+export const updateMessageAttachmentSchema = createUpdateSchema(
+  messageAttachmentsTable,
+  {
+    fileName: (schema) => schema.min(1),
+    fileUrl: (schema) => schema.min(1),
+  }
+).pick({
+  fileName: true,
+  fileUrl: true,
+  mimeType: true,
+  sizeBytes: true,
+  metadata: true,
 })
+
+export const createMessageReactionSchema = createInsertSchema(
+  messageReactionsTable,
+  { emoji: (schema) => schema.min(1) }
+).pick({ userId: true, emoji: true })
+
+export const createMessageReceiptSchema = createInsertSchema(
+  messageReceiptsTable
+).pick({ userId: true, status: true })
+
+export const updateMessageReceiptSchema = createUpdateSchema(
+  messageReceiptsTable
+).pick({ status: true, deliveredAt: true, readAt: true })
 
 export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -248,3 +325,4 @@ export type UpdateMessageAttachmentInput = z.infer<typeof updateMessageAttachmen
 export type CreateMessageReactionInput = z.infer<typeof createMessageReactionSchema>
 export type CreateMessageReceiptInput = z.infer<typeof createMessageReceiptSchema>
 export type UpdateMessageReceiptInput = z.infer<typeof updateMessageReceiptSchema>
+export type AuthUserInput = z.infer<typeof authUserSchema>

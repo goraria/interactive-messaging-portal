@@ -25,10 +25,18 @@ export const messageDeliveryStatusOptions = [
   "read",
 ] as const
 
+export const userStatusOptions = [
+  "active",
+  "inactive",
+  "suspended",
+  "deleted",
+] as const
+
 export const conversationTypeSchema = z.enum(conversationTypeOptions)
 export const conversationMemberRoleSchema = z.enum(conversationMemberRoleOptions)
 export const messageTypeSchema = z.enum(messageTypeOptions)
 export const messageDeliveryStatusSchema = z.enum(messageDeliveryStatusOptions)
+export const userStatusSchema = z.enum(userStatusOptions)
 
 export const uuidSchema = z.string().uuid()
 export const dateTimeSchema = z.string().datetime()
@@ -41,7 +49,9 @@ export const userSchema = z.object({
   name: z.string(),
   email: z.string().email(),
   image: z.string().nullable(),
+  status: userStatusSchema,
   lastSeenAt: nullableDateTimeSchema,
+  syncedAt: dateTimeSchema,
   metadata: metadataSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,

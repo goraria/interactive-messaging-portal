@@ -103,6 +103,11 @@ interface CreateConversationMessageVariables {
   input: CreateRoomMessageInput
 }
 
+interface AddConversationMemberVariables {
+  conversationId: string
+  input: CreateConversationMemberInput
+}
+
 interface CurrentUserQueryInput {
   enabled: boolean
   userId?: string
@@ -122,6 +127,7 @@ const usersService = useQuery<User[], ListQueryInput>({
     enabled,
     retry: false,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
   }),
 })
 
@@ -139,6 +145,7 @@ const conversationsService = useQuery<ConversationDetails[], ListQueryInput>({
     enabled,
     retry: false,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
   }),
 })
 
@@ -158,6 +165,7 @@ const conversationService = useQuery<
     enabled: enabled && Boolean(conversationId),
     retry: false,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
   }),
 })
 
@@ -178,6 +186,7 @@ const messagesService = useQuery<Message[], ConversationMessagesQueryInput>({
     enabled: enabled && Boolean(conversationId),
     retry: false,
     staleTime: 30_000,
+    refetchOnWindowFocus: false,
   }),
 })
 
@@ -207,8 +216,32 @@ const createConversationMessageService = useMutation<
     body: createRoomMessageSchema.parse(input),
     schema: messageSchema,
   }),
-  invalidates: (_message, { conversationId }) => [
-    chatQueryKeys.messages(conversationId),
+})
+
+const createConversationService = useMutation<
+  Conversation,
+  CreateConversationInput
+>({
+  query: (input: CreateConversationInput) => ({
+    url: "/chat/conversations",
+    method: "POST",
+    body: createConversationSchema.parse(input),
+    schema: conversationSchema,
+  }),
+  invalidates: [chatQueryKeys.conversations],
+})
+
+const addConversationMemberService = useMutation<
+  ConversationMember,
+  AddConversationMemberVariables
+>({
+  query: ({ conversationId, input }: AddConversationMemberVariables) => ({
+    url: `/chat/conversations/${encodeURIComponent(conversationId)}/members`,
+    method: "POST",
+    body: createConversationMemberSchema.parse(input),
+    schema: conversationMemberSchema,
+  }),
+  invalidates: (_member, { conversationId }) => [
     chatQueryKeys.conversation(conversationId),
     chatQueryKeys.conversations,
   ],
@@ -221,6 +254,10 @@ const useConversationMessages = createQueryService(messagesService)
 const useCurrentUser = createQueryService(currentUserService)
 const useCreateConversationMessage = createMutationService(
   createConversationMessageService
+)
+const useCreateConversation = createMutationService(createConversationService)
+const useAddConversationMember = createMutationService(
+  addConversationMemberService
 )
 
 export function useUsersQuery(enabled = true, limit = 50) {
@@ -254,6 +291,14 @@ export function useCreateConversationMessageMutation(conversationId: string) {
 
 export function useCurrentUserQuery(enabled: boolean, userId?: string) {
   return useCurrentUser({ enabled, userId })
+}
+
+export function useCreateConversationMutation() {
+  return useCreateConversation()
+}
+
+export function useAddConversationMemberMutation() {
+  return useAddConversationMember()
 }
 
 export function mergeMessageResults(current: Message[], incoming: Message[]) {
@@ -487,7 +532,7 @@ export async function listRoomMessages(
   limit = 80
 ): Promise<Message[]> {
   return request(
-    `/api/chat/rooms/${encodeURIComponent(roomName)}/messages`,
+    `/chat/rooms/${encodeURIComponent(roomName)}/messages`,
     listMessagesSchema,
     {
       proxy: true,
@@ -501,7 +546,7 @@ export async function createRoomMessage(
   input: CreateRoomMessageInput
 ): Promise<Message> {
   return request(
-    `/api/chat/rooms/${encodeURIComponent(roomName)}/messages`,
+    `/chat/rooms/${encodeURIComponent(roomName)}/messages`,
     messageSchema,
     {
       proxy: true,

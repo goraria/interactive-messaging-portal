@@ -6,19 +6,19 @@ import { Button } from "@gorth/primitive/custom/button"
 import { SidebarProvider } from "@gorth/primitive/custom/sidebar"
 import { Navbar } from "@gorth/primitive/layouts/navbar"
 import { useAuth } from "@/hooks/use-auth"
+import { useUser } from "@/hooks/use-user"
 import { sharedNavbar, visitor } from "@/lib/utils/constant"
-import { toNavigationUser } from "@/lib/utils/formatter"
 
 export default function SharedLayout({ children }: { children: ReactNode }) {
   const auth = useAuth()
-  const user = auth.account ? toNavigationUser(auth.account) : visitor
+  const { user } = useUser()
 
   return (
     <SidebarProvider>
       <div className="bg-background text-foreground flex min-h-svh flex-1 flex-col">
         <Navbar
           auth={auth}
-          user={user}
+          user={user ?? visitor}
           nav={{
             main: sharedNavbar.navDropdown,
             secondary: sharedNavbar.navSignal,

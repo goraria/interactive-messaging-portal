@@ -1,19 +1,28 @@
 "use client"
 
+import axios from "@gorth/structure/cores/axios"
+
 let refreshRequest: Promise<boolean> | null = null
 
 export function refreshAuthentication() {
   if (refreshRequest) return refreshRequest
 
-  refreshRequest = fetch("/auth/me", {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-    },
-  })
-    .then((response) => response.ok && response.status !== 204)
+  refreshRequest = axios
+    .request({
+      url: "/auth/me",
+      method: "GET",
+      withCredentials: true,
+      headers: {
+        Accept: "application/json",
+        "Cache-Control": "no-store",
+      },
+    })
+    .then(
+      (response) =>
+        response.status >= 200 &&
+        response.status < 300 &&
+        response.status !== 204
+    )
     .catch(() => false)
     .finally(() => {
       refreshRequest = null

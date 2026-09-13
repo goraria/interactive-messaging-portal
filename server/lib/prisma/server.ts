@@ -11,7 +11,7 @@ if (!global.prisma) {
 }
 prisma = global.prisma;
 
-// if (process.env.NODE_ENV === 'production') {
+// if (isProduction) {
 //   // Production: create a single instance with optimized connection pool
 //   prisma = global.prisma ?? new PrismaClient({
 //     log: ['error']
@@ -22,7 +22,7 @@ prisma = global.prisma;
 // } else {
 //   // Development: create a new instance with connection pool
 //   prisma = global.prisma ?? new PrismaClient({
-//     log: process.env.EXPRESS_NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+//     log: isProduction ? ["error"] : ["query", "error", "warn"],
 //   });
 //   if (!global.prisma) {
 //     global.prisma = prisma;

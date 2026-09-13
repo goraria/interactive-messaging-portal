@@ -7,8 +7,8 @@ import axios, {
   type AxiosResponse,
   type Method,
   type ResponseType,
-} from "axios"
-import { toast as showToast } from "@gorth/primitive/cores/sonner"
+} from "@gorth/structure/cores/axios"
+import { toast } from "@gorth/primitive/custom/toast"
 import {
   useMutation as useMutationDefault,
   useQuery as useQueryDefault,
@@ -163,13 +163,13 @@ export interface CallerQueryServiceDefinition<
 > {
   queryKey: TQueryKey | ((arg: TArg) => TQueryKey)
   query:
-    | CallerRequestOptions<TBody, TParams, TData>
-    | ((arg: TArg) => CallerRequestOptions<TBody, TParams, TData>)
+  | CallerRequestOptions<TBody, TParams, TData>
+  | ((arg: TArg) => CallerRequestOptions<TBody, TParams, TData>)
   queryOptions?:
-    | CallerQueryHookOptions<TData, TError, TSelected, TQueryKey>
-    | ((
-        arg: TArg
-      ) => CallerQueryHookOptions<TData, TError, TSelected, TQueryKey>)
+  | CallerQueryHookOptions<TData, TError, TSelected, TQueryKey>
+  | ((
+    arg: TArg
+  ) => CallerQueryHookOptions<TData, TError, TSelected, TQueryKey>)
 }
 
 export interface CallerMutationServiceDefinition<
@@ -181,8 +181,8 @@ export interface CallerMutationServiceDefinition<
   TParams = Record<string, unknown>,
 > {
   query:
-    | CallerRequestOptions<TBody, TParams, TData>
-    | ((variables: TVariables) => CallerRequestOptions<TBody, TParams, TData>)
+  | CallerRequestOptions<TBody, TParams, TData>
+  | ((variables: TVariables) => CallerRequestOptions<TBody, TParams, TData>)
   mutationOptions?: CallerMutationHookOptions<
     TData,
     TVariables,
@@ -190,8 +190,8 @@ export interface CallerMutationServiceDefinition<
     TContext
   >
   invalidates?:
-    | readonly QueryKey[]
-    | ((data: TData, variables: TVariables) => readonly QueryKey[])
+  | readonly QueryKey[]
+  | ((data: TData, variables: TVariables) => readonly QueryKey[])
 }
 
 export interface CallerMutationPromise<TData> {
@@ -388,7 +388,7 @@ function notifySuccess<TData>(
   if (!option || option === true) return
 
   const message = resolveToastMessage(option.success, data)
-  if (message) showToast.success(message)
+  if (message) toast.add({ type: "success", description: message })
 }
 
 function notifyError<TData>(
@@ -401,7 +401,7 @@ function notifyError<TData>(
     option === true
       ? error.message
       : (resolveToastMessage(option.error, error) ?? error.message)
-  showToast.error(message)
+  toast.add({ type: "error", description: message })
 }
 
 export async function caller<

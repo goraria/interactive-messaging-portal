@@ -16,10 +16,6 @@ router.get("/", (req, res) => {
   res.sendFile("index.html", { root: assetsRoot })
 })
 
-router.get("/api", (_req, res) => {
-  res.send("Professor Synapse API is running")
-})
-
 router.get("/health", (_req, res) => {
   res.status(200).json({
     status: "OK",

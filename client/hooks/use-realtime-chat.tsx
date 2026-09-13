@@ -1,15 +1,22 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import type { Message as AblyMessage } from "ably"
 import { useQueryClient } from "@gorth/primitive/cores/tanstack/query"
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import { createAblyClient, getMessageChannelName } from "@/lib/ably/client"
 import {
   chatQueryKeys,
+  getMessage,
   mergeMessageResults,
   useConversationMessagesQuery,
   useCreateConversationMessageMutation,
 } from "@/services/chat"
-import { messageSchema, type Message, type MessageType } from "@/schemas/chat"
+import {
+  messageSchema,
+  type ConversationDetails,
+  type Message,
+  type MessageType,
+} from "@/schemas/chat"
 
 export interface ChatMessage {
   id: string
@@ -38,11 +45,9 @@ export function useRealtimeChat({
   username,
   onMessage,
 }: UseRealtimeChatOptions) {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const ably = useMemo(() => createAblyClient(conversationId), [conversationId])
   const queryClient = useQueryClient()
-  const channelRef = useRef<ReturnType<
-    NonNullable<typeof supabase>["channel"]
-  > | null>(null)
+  const mountedRef = useRef(true)
   const messagesQuery = useConversationMessagesQuery(conversationId)
   const [sendMessageMutation, sendState] =
     useCreateConversationMessageMutation(conversationId)
@@ -56,66 +61,131 @@ export function useRealtimeChat({
 
   const appendMessages = useCallback(
     async (nextMessages: ChatMessage[]) => {
+      const latestMessage = nextMessages.at(-1) as Message | undefined
+
       queryClient.setQueryData<Message[]>(
         chatQueryKeys.messages(conversationId),
         (current = []) =>
           mergeMessageResults(current, nextMessages as Message[])
       )
-      void queryClient.invalidateQueries({
-        queryKey: chatQueryKeys.conversations,
-      })
+
+      if (latestMessage) {
+        const updateConversation = (conversation: ConversationDetails) => {
+          const shouldUpdate =
+            !conversation.lastMessage ||
+            conversation.lastMessage.id === latestMessage.id ||
+            new Date(latestMessage.createdAt).getTime() >=
+              new Date(conversation.lastMessage.createdAt).getTime()
+
+          return shouldUpdate
+            ? {
+                ...conversation,
+                lastMessage: latestMessage,
+                updatedAt: latestMessage.createdAt,
+              }
+            : conversation
+        }
+
+        queryClient.setQueryData<ConversationDetails>(
+          chatQueryKeys.conversation(conversationId),
+          (current) => (current ? updateConversation(current) : current)
+        )
+        queryClient.setQueriesData<ConversationDetails[]>(
+          { queryKey: chatQueryKeys.conversations },
+          (current) =>
+            current
+              ? current
+                  .map((conversation) =>
+                    conversation.id === conversationId
+                      ? updateConversation(conversation)
+                      : conversation
+                  )
+                  .toSorted(
+                    (left, right) =>
+                      new Date(right.updatedAt).getTime() -
+                      new Date(left.updatedAt).getTime()
+                  )
+              : current
+        )
+      }
+
       await onMessage?.(nextMessages)
     },
     [conversationId, onMessage, queryClient]
   )
 
   useEffect(() => {
-    if (!supabase) {
-      return
+    mountedRef.current = true
+    const channel = ably.channels.get(getMessageChannelName(conversationId))
+    const receiveMessage = (event: AblyMessage) => {
+      if (
+        event.data?.conversationId !== conversationId ||
+        typeof event.data?.messageId !== "string"
+      ) {
+        return
+      }
+
+      const parsedMessage = messageSchema.safeParse(event.data.message)
+
+      if (parsedMessage.success) {
+        void appendMessages([parsedMessage.data])
+        return
+      }
+
+      const cachedMessages = queryClient.getQueryData<Message[]>(
+        chatQueryKeys.messages(conversationId)
+      )
+
+      if (cachedMessages?.some(({ id }) => id === event.data.messageId)) return
+
+      void getMessage(event.data.messageId).then((message) =>
+        appendMessages([message])
+      )
     }
 
-    const channel = supabase
-      .channel(`chat:${conversationId}`, {
-        config: {
-          broadcast: {
-            self: false,
-          },
-        },
-      })
-      .on("broadcast", { event: "message" }, (payload) => {
-        const result = messageSchema.safeParse(payload.payload)
+    const connect = async () => {
+      try {
+        ably.connect()
+        await Promise.all([
+          channel.subscribe("message.created", receiveMessage),
+          channel.subscribe("message.updated", receiveMessage),
+          channel.subscribe("message.deleted", receiveMessage),
+        ])
 
-        if (result.success && result.data.conversationId === conversationId) {
-          void appendMessages([result.data])
+        if (mountedRef.current) {
+          setRealtimeState({ conversationId, error: null })
         }
-      })
-
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        setRealtimeState({ conversationId, error: null })
+      } catch {
+        if (mountedRef.current) {
+          setRealtimeState({
+            conversationId,
+            error: "Realtime connection failed",
+          })
+        }
       }
+    }
 
-      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-        setRealtimeState({
-          conversationId,
-          error: "Realtime connection failed",
-        })
-      }
-    })
-
-    channelRef.current = channel
+    void connect()
 
     return () => {
-      channelRef.current = null
-      void supabase.removeChannel(channel)
+      mountedRef.current = false
+      channel.unsubscribe()
+      ably.close()
     }
-  }, [appendMessages, conversationId, supabase])
+  }, [ably, appendMessages, conversationId, queryClient])
+
+  const realtimeReady =
+    realtimeState.conversationId === conversationId && !realtimeState.error
+  const realtimeError =
+    realtimeState.conversationId === conversationId
+      ? realtimeState.error
+      : null
 
   const sendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
 
-      if (!trimmed || sendState.isLoading) {
+      if (!realtimeReady || !trimmed || sendState.isLoading) {
         return null
       }
 
@@ -123,29 +193,18 @@ export function useRealtimeChat({
         const message = await sendMessageMutation({
           content: trimmed,
         }).unwrap()
-        await onMessage?.([message])
-        await channelRef.current?.send({
-          type: "broadcast",
-          event: "message",
-          payload: message,
-        })
+        await appendMessages([message])
 
         return message
       } catch {
         return null
       }
     },
-    [onMessage, sendMessageMutation, sendState.isLoading]
+    [appendMessages, realtimeReady, sendMessageMutation, sendState.isLoading]
   )
 
   const messages = messagesQuery.data ?? emptyMessages
-  const realtimeError = !supabase
-    ? "Supabase Realtime is not configured"
-    : realtimeState.conversationId === conversationId
-      ? realtimeState.error
-      : null
   const error =
-    realtimeError ??
     messagesQuery.error?.message ??
     sendState.error?.message ??
     null
@@ -157,7 +216,7 @@ export function useRealtimeChat({
     error,
     sendMessage,
     username,
-    realtimeReady:
-      realtimeState.conversationId === conversationId && !realtimeState.error,
+    realtimeReady,
+    realtimeError: Boolean(realtimeError),
   }
 }

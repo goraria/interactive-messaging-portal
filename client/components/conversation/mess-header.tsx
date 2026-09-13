@@ -7,6 +7,8 @@ import {
   AvatarImage,
 } from "@gorth/primitive/custom/avatar"
 import { Info, Phone, Video } from "@gorth/primitive/cores/lucide"
+import { cn } from "@gorth/primitive/lib/utils"
+import { useLayout } from "@gorth/primitive/providers/layout"
 import { useConversation } from "@/hooks/use-conversation"
 import { getInitials } from "@/lib/utils/formatter"
 
@@ -22,10 +24,19 @@ export function MessHeader({
   subtitle,
 }: MessHeaderProps) {
   const { open: infoOpen, toggle: toggleInfoSidebar } = useConversation()
+  const { variant } = useLayout()
   const initials = getInitials(conversationName)
 
   return (
-    <header className="bg-card flex h-14 shrink-0 items-center justify-between border-b px-6 shadow-sm">
+    <header
+      className={cn(
+        "bg-card flex h-14 shrink-0 items-center justify-between px-6",
+        variant === "sidebar" && "border-b shadow-sm",
+        variant === "floating" &&
+        "rounded-lg shadow-sm ring-1 ring-sidebar-border",
+        variant === "inset" && "rounded-t-xl border"
+      )}
+    >
       <div className="flex min-w-0 items-center gap-3">
         <Avatar>
           <AvatarImage src={avatar ?? undefined} alt={conversationName} />
@@ -41,7 +52,7 @@ export function MessHeader({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-2">
         <Button
           type="button"
           variant="ghost"

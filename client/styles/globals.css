@@ -2,3 +2,11 @@
 @import "@gorth/primitive/globals.css";
 
 @source "../**/*.{ts,tsx}";
+
+@layer utilities {
+  .chat-shell > [data-slot="layout-header"][data-layout="floating"] > div {
+    width: 100%;
+    max-width: none;
+    padding-inline: calc(var(--spacing) * 2);
+  }
+}

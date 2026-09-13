@@ -120,7 +120,7 @@
 // }
 
 // function getRequiredSecret(name: string, fallback: string | undefined) {
-//   const value = process.env[name] ?? fallback;
+//   const value = environment[name] ?? fallback;
 
 //   if (!value) {
 //     throw new Error(`Missing ${name}`);
@@ -130,7 +130,7 @@
 // }
 
 // function getIssuer(req: Request) {
-//   return process.env.BETTER_AUTH_URL ?? `${req.protocol}://${req.get("host")}`;
+//   return betterAuthUrl;
 // }
 
 // function getAppContext(req: Request): SsoAppContext {
@@ -183,17 +183,17 @@
 //   return {
 //     accessTokenSecret: getRequiredSecret(
 //       "GORTH_ACCESS_TOKEN_SECRET",
-//       process.env.BETTER_AUTH_SECRET ?? process.env.EXPRESS_JWT_SECRET,
+//       betterAuthSecret,
 //     ),
 //     refreshTokenSecret: getRequiredSecret(
 //       "GORTH_REFRESH_TOKEN_SECRET",
-//       process.env.BETTER_AUTH_SECRET ?? process.env.EXPRESS_JWT_SECRET,
+//       betterAuthSecret,
 //     ),
 //   };
 // }
 
 // function assertSsoClient(req: Request) {
-//   const expected = process.env.SSO_CLIENT_INTERNAL_SECRET;
+//   const expected = ssoOAuthClientId;
 
 //   if (!expected) {
 //     return;
@@ -208,7 +208,7 @@
 //   name: string,
 //   fallback: NonNullable<SignOptions["expiresIn"]>,
 // ): NonNullable<SignOptions["expiresIn"]> {
-//   return (process.env[name] as NonNullable<SignOptions["expiresIn"]> | undefined) ?? fallback;
+//   return (environment[name] as NonNullable<SignOptions["expiresIn"]> | undefined) ?? fallback;
 // }
 
 // function signTokenPair(

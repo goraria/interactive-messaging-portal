@@ -1,6 +1,6 @@
 "use client"
 
-import { Button } from "@/components/primitive/default"
+import { Button } from "@gorth/primitive/custom/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useLabAuthQuery } from "@/services/lab"
 import { Spinner } from "@gorth/primitive/pattern/spinner"

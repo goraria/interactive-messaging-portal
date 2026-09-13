@@ -1,19 +1,15 @@
 import express, { Request, Response, NextFunction } from "express"
-import dotenv from "dotenv"
 import session from "express-session"
 import { Logger } from "@gorth/mechanism/lib/logger"
+import { corsConfig } from "@gorth/mechanism/configs/cors"
+import { helmetConfig } from "@gorth/mechanism/configs/helmet"
+import { morganMiddleware } from "@gorth/mechanism/configs/morgan"
+import { bodyParserConfig } from "@gorth/mechanism/configs/body-parser"
+import { cookieParserConfig } from "@gorth/mechanism/configs/cookie-parser"
 import {
-  corsConfig,
-  helmetConfig,
-  morganMiddleware,
-  bodyParserConfig,
-  cookieParserConfig,
-} from "@/lib/mechanism/config/index"
-import {
-  allowedRedirectOrigins,
-  expressClientUrl,
-  expressLocalUrl,
-  isExpressProduction,
+  getCorsOrigins,
+  isProduction,
+  sessionSecret,
 } from "@/lib/utils/environment"
 import { authRoutes } from "@/routes/auth"
 import { conversationMembersRoutes } from "@/routes/conversation-members"
@@ -22,6 +18,7 @@ import { messageAttachmentsRoutes } from "@/routes/message-attachments"
 import { messageReactionsRoutes } from "@/routes/message-reactions"
 import { messageReceiptsRoutes } from "@/routes/message-receipts"
 import { messagesRoutes } from "@/routes/messages"
+import { realtimeRoutes } from "@/routes/realtime"
 import { usersRoutes } from "@/routes/users"
 import labRoutes from "@/routes/lab"
 import sharedRoutes from "@/routes/shared"
@@ -34,13 +31,6 @@ export async function AppModule() {
   // ================================
 
   /* CONFIGURATIONS */
-  dotenv.config({
-    path: ".env.local",
-    override: true,
-    debug: false,
-    quiet: true,
-  })
-
   app.use(helmetConfig())
   app.use(morganMiddleware())
 
@@ -68,16 +58,15 @@ export async function AppModule() {
   app.use(cookieParserConfig())
   app.use(
     session({
-      secret: process.env.EXPRESS_JWT_SECRET!,
+      secret: sessionSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.EXPRESS_ENV === "production",
+        secure: isProduction,
         httpOnly: true,
         maxAge: 30 * 60 * 60 * 24,
         sameSite: "lax",
         // expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // Thời gian hết hạn cookie
-        // domain: process.env.EXPRESS_CLIENT_URL!, // Tùy chọn: tên miền cookie
         // secure: true, // Chỉ gửi cookie qua HTTPS
         // sameSite: 'Lax' // Hoặc 'Strict'. 'None' cần secure: true
         // path: '/', // Phạm vi cookie (thường là gốc)
@@ -85,17 +74,9 @@ export async function AppModule() {
     })
   )
 
-  const productionOrigins = [
-    expressClientUrl,
-    expressLocalUrl,
-    ...(allowedRedirectOrigins ?? "").split(","),
-  ]
-    .map((origin) => origin?.trim())
-    .filter((origin): origin is string => Boolean(origin))
-
   app.use(
     corsConfig({
-      origin: isExpressProduction ? productionOrigins : true,
+      origin: isProduction ? getCorsOrigins() : true,
       credentials: true,
     })
   )
@@ -106,6 +87,7 @@ export async function AppModule() {
   app.use("/chat", conversationsRoutes())
   app.use("/chat", conversationMembersRoutes())
   app.use("/chat", messagesRoutes())
+  app.use("/chat", realtimeRoutes())
   app.use("/chat", messageAttachmentsRoutes())
   app.use("/chat", messageReactionsRoutes())
   app.use("/chat", messageReceiptsRoutes())
@@ -123,10 +105,8 @@ export async function AppModule() {
     console.log(Logger(`Error: ${error}`, "error", "red"))
     res.status(500).json({
       error: "Internal Server Error",
-      message: isExpressProduction ? "Something went wrong" : error.message,
+      message: isProduction ? "Something went wrong" : error.message,
     })
   })
-  // app.use(createRealtime);
-
   return app
 }

@@ -1,3 +1,4 @@
+import { v4 } from "@gorth/structure/cores/uuid"
 import type { SsoExchangeResponse } from "@/lib/utils/interface"
 
 const AUTH_CODE_TTL_MS = 60 * 1000
@@ -12,7 +13,8 @@ const globalStore = globalThis as typeof globalThis & {
 }
 
 const authorizationCodes =
-  globalStore.__ssoAuthorizationCodes ?? new Map<string, AuthorizationCodeRecord>()
+  globalStore.__ssoAuthorizationCodes ??
+  new Map<string, AuthorizationCodeRecord>()
 
 globalStore.__ssoAuthorizationCodes = authorizationCodes
 
@@ -29,7 +31,7 @@ function pruneExpiredAuthorizationCodes() {
 export function createAuthorizationCode(payload: SsoExchangeResponse) {
   pruneExpiredAuthorizationCodes()
 
-  const code = crypto.randomUUID()
+  const code = v4()
   authorizationCodes.set(code, {
     payload,
     expiresAt: Date.now() + AUTH_CODE_TTL_MS,

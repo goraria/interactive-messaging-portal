@@ -1,24 +1,14 @@
-// import "dotenv/config";
-import dotenv from "dotenv";
-import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '@prisma/client/index';
-import { Pool } from '@gorth/structure/cores/pg'
+import { PrismaPg } from "@prisma/adapter-pg"
+import { PrismaClient } from "@prisma/client/index"
+import { Pool } from "@gorth/structure/cores/pg"
+import { databaseUrl } from "@/lib/utils/environment"
 
-dotenv.config({
-	path: ".env.local",
-	override: true,
-	debug: false,
-	quiet: true
-})
-// const connectionString = `${process.env.EXPRESS_PRIVATE_SUPABASE_DEMO_URL}`;
-const connectionString = `${process.env.EXPRESS_PRIVATE_SUPABASE_DIRECT_URL}`;
-// const connectionString = `${process.env.EXPRESS_PRIVATE_SUPABASE_URL}`
+const connectionString = `${databaseUrl}`
 const pool = new Pool({ connectionString })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 export { prisma }
-
 
 // import { PrismaClient } from '@prisma/client/index';
 
@@ -31,13 +21,13 @@ export { prisma }
 // // so we use global to prevent multiple Prisma Client instances
 // let prisma: PrismaClient;
 
-// if (process.env.NODE_ENV === 'production') {
+// if (isProduction) {
 //   // Production: create a single instance with optimized connection pool
 //   prisma = global.prisma ?? new PrismaClient({
 //     log: ['error'],
 //     datasources: {
 //       db: {
-//         url: process.env.EXPRESS_PRIVATE_SUPABASE_URL,
+//         url: databaseUrl,
 //       },
 //     },
 //   });
@@ -47,10 +37,10 @@ export { prisma }
 // } else {
 //   // Development: create a new instance with connection pool
 //   prisma = global.prisma ?? new PrismaClient({
-//     log: process.env.EXPRESS_NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+//     log: isProduction ? ["error"] : ["error", "warn"],
 //     datasources: {
 //       db: {
-//         url: process.env.EXPRESS_PRIVATE_SUPABASE_URL,
+//         url: databaseUrl,
 //       },
 //     },
 //   });
@@ -69,10 +59,10 @@ export { prisma }
 //
 // // export const prisma =
 // //   global.prisma ?? new PrismaClient({
-// //     log: process.env.EXPRESS_NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+// //     log: isProduction ? ["error"] : ["query", "error", "warn"],
 // //   });
 // //
-// // if (process.env.EXPRESS_NODE_ENV !== "production") global.prisma = prisma;
+// // if (!isProduction) global.prisma = prisma;
 //
 // let prisma: PrismaClient;
 // if (!global.prisma) {

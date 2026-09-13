@@ -5,43 +5,38 @@ import type {
   EndpointFetchArgs,
 } from "@/lib/utils/interface"
 
-import { redirectUrl } from "@/lib/utils/environment"
+import { clientUrl } from "@/lib/utils/environment"
 import type { AuthUser, SsoExchangeResponse } from "@/lib/utils/interface"
-import { toast } from "@gorth/primitive/cores/sonner"
+import { toast } from "@gorth/primitive/custom/toast"
 
 export function parseJsonInput(
   value: string,
-  options: { label: string; objectOnly: true },
+  options: { label: string; objectOnly: true }
 ): Record<string, unknown> | null | undefined
 export function parseJsonInput(
   value: string,
-  options: { label: string; objectOnly?: false },
+  options: { label: string; objectOnly?: false }
 ): unknown | null | undefined
 export function parseJsonInput(
   value: string,
-  { label, objectOnly = false }: { label: string; objectOnly?: boolean },
+  { label, objectOnly = false }: { label: string; objectOnly?: boolean }
 ) {
   const text = value.trim()
   if (!text) return undefined
 
   try {
     const parsed = JSON.parse(text)
-    if (objectOnly && (!parsed || typeof parsed !== "object" || Array.isArray(parsed))) {
-      toast.error(label + " must be a valid JSON object")
+    if (
+      objectOnly &&
+      (!parsed || typeof parsed !== "object" || Array.isArray(parsed))
+    ) {
+      toast.add({ type: "error", description: label + " must be a valid JSON object" })
       return null
     }
     return parsed
   } catch {
-    toast.error(label + " is not valid JSON")
+    toast.add({ type: "error", description: label + " is not valid JSON" })
     return null
-  }
-}
-
-export function toNavigationUser(user: AuthUser) {
-  return {
-    name: user.name,
-    email: user.email,
-    avatar: user.image ?? "",
   }
 }
 
@@ -60,6 +55,8 @@ export function getSsoUser(payload: unknown): AuthUser | null {
     id: data.user.id,
     email: data.user.email,
     name: typeof data.user.name === "string" ? data.user.name : data.user.email,
+    username:
+      typeof data.user.username === "string" ? data.user.username : null,
     image: typeof data.user.image === "string" ? data.user.image : null,
   }
 }
@@ -211,8 +208,6 @@ export function getEndpointArgKey(arg: unknown) {
   }
 }
 
-const allowedRedirectOrigins = redirectUrl ?? ""
-
 export function normalizeOrigin(value: string) {
   try {
     return new URL(value).origin
@@ -221,11 +216,7 @@ export function normalizeOrigin(value: string) {
   }
 }
 
-export const getAllowedOrigins = () =>
-  allowedRedirectOrigins
-    .split(",")
-    .map((origin) => normalizeOrigin(origin.trim()))
-    .filter((origin): origin is string => Boolean(origin))
+const clientOrigin = normalizeOrigin(clientUrl)
 
 export const resolveRedirect = (value: string | null) => {
   if (!value) {
@@ -238,7 +229,7 @@ export const resolveRedirect = (value: string | null) => {
       return null
     }
 
-    if (!getAllowedOrigins().includes(target.origin)) {
+    if (!clientOrigin || target.origin !== clientOrigin) {
       return null
     }
 
@@ -255,7 +246,7 @@ export function getRedirectValue(value: string | string[] | undefined) {
 export function getCorsHeaders(request: Request): HeadersInit {
   const origin = request.headers.get("origin")
 
-  if (!origin || !getAllowedOrigins().includes(origin)) {
+  if (!origin || !clientOrigin || normalizeOrigin(origin) !== clientOrigin) {
     return {}
   }
 

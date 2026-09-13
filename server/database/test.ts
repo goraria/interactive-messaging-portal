@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm"
+import { relations } from "drizzle-orm/_relations"
 import {
   type AnyPgColumn,
   boolean,
@@ -12,9 +12,9 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
-import { randomUUID } from "node:crypto"
+import { v4 } from "@gorth/structure/cores/uuid"
 
-const createTextId = () => randomUUID()
+const createTextId = () => v4()
 
 export const categoryValues = [
   "FOLLOWING",

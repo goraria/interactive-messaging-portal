@@ -18,11 +18,22 @@ export function useUser() {
     return result.data ?? null
   }
 
-  const user = auth.authenticated ? (query.data ?? null) : null
+  const user =
+    auth.account && query.data
+      ? {
+          ...query.data,
+          name: auth.account.name,
+          email: auth.account.email,
+          image: auth.account.image,
+          avatar: auth.account.image ?? "",
+          username: auth.account.username,
+        }
+      : null
   const loading = auth.loading || (auth.authenticated && query.isPending)
 
   return {
     user,
+    username: auth.username,
     raw: auth.account,
     isLoggedIn: auth.authenticated,
     isLoading: loading,

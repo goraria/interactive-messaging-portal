@@ -1,61 +1,40 @@
 "use client"
 
-import React, { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import React from "react"
 import { SidebarProvider, SidebarInset } from "@gorth/primitive/custom/sidebar"
 import { Dashbar } from "@/layouts/dashbar"
+import { DashboardFooter } from "@/layouts/footer"
 import { AppSidebar } from "@gorth/primitive/dashboard/app-sidebar"
 import { settingSidebar, visitor } from "@/lib/utils/constant"
 import { useAuth } from "@/hooks/use-auth"
-import { toNavigationUser } from "@/lib/utils/formatter"
+import { useUser } from "@/hooks/use-user"
+import { AuthGuard } from "@/layouts/guard"
 
 export default function MainLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const router = useRouter()
   const authControls = useAuth()
+  const { user } = useUser()
   const sidebar = {
     ...settingSidebar,
-    user: authControls.account
-      ? toNavigationUser(authControls.account)
-      : visitor,
-  }
-
-  useEffect(() => {
-    if (
-      !authControls.loading &&
-      !authControls.authenticated &&
-      !authControls.error
-    ) {
-      router.replace("/")
-    }
-  }, [
-    authControls.authenticated,
-    authControls.error,
-    authControls.loading,
-    router,
-  ])
-
-  if (
-    !authControls.loading &&
-    !authControls.authenticated &&
-    !authControls.error
-  ) {
-    return null
+    user: user ?? visitor,
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar data={sidebar} auth={authControls} />
+    <AuthGuard>
+      <SidebarProvider>
+        <AppSidebar data={sidebar} auth={authControls} />
 
-      <SidebarInset>
-        <Dashbar />
-        <main className="flex flex-1 flex-col">
-          <div className="container mx-auto p-6">{children}</div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+        <SidebarInset>
+          <Dashbar />
+          <main className="flex flex-1 flex-col">
+            <div className="container mx-auto p-6">{children}</div>
+          </main>
+          <DashboardFooter />
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthGuard>
   )
 }

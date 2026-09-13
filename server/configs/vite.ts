@@ -2,6 +2,7 @@ import { existsSync } from "fs"
 import { readFile } from "fs/promises"
 import { basename, relative, resolve } from "path"
 import pc from "@gorth/mechanism/cores/picocolors"
+import { morganMiddleware } from "@gorth/mechanism/configs/morgan"
 import { Logger } from "@gorth/mechanism/lib/logger"
 import {
   version as viteVersion,
@@ -26,7 +27,7 @@ const runtimeState = (runtime.development ??= {
 const configLoadedAt = performance.now()
 const rootPath = resolve(import.meta.dirname, "..")
 const indexPath = resolve(rootPath, "assets", "index.html")
-const serverEntry = "/app/main.ts"
+const serverEntry = "/app/index.ts"
 
 function environmentFiles(mode: string): string {
   return [".env", ".env.local", `.env.${mode}`, `.env.${mode}.local`]
@@ -119,6 +120,8 @@ export function configureDevelopmentServer(server: ViteDevServer): void {
       printServerStarted(server, server.config.mode)
     }, 0)
   })
+
+  server.middlewares.use(morganMiddleware())
 
   server.middlewares.use(async (req, res, next) => {
     const pathname = new URL(req.url ?? "/", "http://localhost").pathname

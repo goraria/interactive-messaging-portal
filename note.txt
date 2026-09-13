@@ -1,0 +1,42 @@
+@gorth/chat
+interactive-messaging
+├── conversation
+│   ├── direct
+│   ├── group
+│   ├── app-conversation
+│   ├── participant
+│   └── conversation-state
+│
+├── message
+│   ├── text
+│   ├── media
+│   ├── attachment
+│   ├── reply
+│   ├── forward
+│   ├── edit
+│   └── delete
+│
+├── delivery
+│   ├── sent
+│   ├── delivered
+│   ├── read
+│   └── receipt
+│
+├── presence
+│   ├── online
+│   ├── offline
+│   ├── typing
+│   └── last-seen
+│
+├── integration
+│   ├── social-chat
+│   ├── video-chat
+│   ├── reader-chat
+│   ├── task-chat
+│   └── marketplace-chat
+│
+└── moderation
+    ├── block
+    ├── mute
+    ├── report
+    └── restriction

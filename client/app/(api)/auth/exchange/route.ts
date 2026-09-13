@@ -19,6 +19,11 @@ import {
 import { routes, ssoOAuthClientId } from "@/lib/utils/environment"
 import { getSsoUser, resolveInternalPath } from "@/lib/utils/formatter"
 import type { AuthUser, SsoExchangeResponse } from "@/lib/utils/interface"
+import {
+  exchangeRouteAuthorizationCode,
+  getRouteJwks,
+  getRouteOpenIdConfiguration,
+} from "@/services/route"
 
 export const runtime = "nodejs"
 
@@ -247,18 +252,14 @@ function getJwtAlgorithm(alg: string) {
 }
 
 async function loadOpenIdConfiguration(issuer: string) {
-  const response = await fetch(`${issuer}/.well-known/openid-configuration`, {
-    headers: {
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  })
+  const response =
+    await getRouteOpenIdConfiguration<OAuthDiscoveryMetadata>(issuer)
 
-  if (!response.ok) {
+  if (response.status < 200 || response.status >= 300) {
     throw new Error("openid_configuration_failed")
   }
 
-  const metadata = (await response.json()) as OAuthDiscoveryMetadata
+  const metadata = response.data
 
   if (normalizeIssuer(metadata.issuer) !== issuer || !metadata.jwks_uri) {
     throw new Error("invalid_openid_configuration")
@@ -268,18 +269,13 @@ async function loadOpenIdConfiguration(issuer: string) {
 }
 
 async function loadJwks(jwksUri: string) {
-  const response = await fetch(jwksUri, {
-    headers: {
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  })
+  const response = await getRouteJwks<JsonWebKeySet>(jwksUri)
 
-  if (!response.ok) {
+  if (response.status < 200 || response.status >= 300) {
     throw new Error("jwks_failed")
   }
 
-  const jwks = (await response.json()) as JsonWebKeySet
+  const jwks = response.data
 
   if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) {
     throw new Error("invalid_jwks")
@@ -355,18 +351,11 @@ async function exchangeCode(
   body.set("redirect_uri", new URL("/auth/exchange", request.url).toString())
   body.set("resource", getResourceAudience(request))
 
-  const response = await fetch(new URL("/auth/oauth2/token", getSsoOrigin()), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body,
-    cache: "no-store",
-  })
+  const response =
+    await exchangeRouteAuthorizationCode<OAuthTokenResponse>(body)
 
-  if (!response.ok) {
-    const detail = await readOAuthError(response)
+  if (response.status < 200 || response.status >= 300) {
+    const detail = readOAuthError(response.data)
     throw Object.assign(new Error("oauth_code_exchange_failed"), {
       status: response.status,
       oauthError: detail?.error,
@@ -374,7 +363,7 @@ async function exchangeCode(
     })
   }
 
-  return (await response.json()) as OAuthTokenResponse
+  return response.data
 }
 
 function createSsoPayload(

@@ -11,6 +11,7 @@ import type { CreateRoomMessageInput, UpdateMessageInput } from "@/schemas/chat"
 import { toMessage } from "@/lib/utils/chat"
 import { createServiceError } from "@/lib/utils/service"
 import { touchConversation } from "@/services/conversations"
+import { publishMessageEvent } from "@/services/realtime"
 
 export async function listConversationMessages(
   conversation: ConversationRow,
@@ -78,7 +79,14 @@ export async function createConversationMessage(
 
     if (!message) throw createServiceError(500, "message_create_failed")
     await touchConversation(conversation)
-    return toMessage(message, user, conversation)
+    const result = toMessage(message, user, conversation)
+    await publishMessageEvent(
+      conversation.id,
+      "message.created",
+      message.id,
+      result
+    )
+    return result
   } catch (error) {
     throw error
   }
@@ -141,7 +149,14 @@ export async function updateMessage(
       .returning()
 
     if (!message) throw createServiceError(404, "message_not_found")
-    return toMessage(message, null, null)
+    const result = await getMessage(message.id)
+    await publishMessageEvent(
+      message.conversationId,
+      "message.updated",
+      message.id,
+      result
+    )
+    return result
   } catch (error) {
     throw error
   }
@@ -156,7 +171,14 @@ export async function deleteMessage(messageId: string) {
       .returning()
 
     if (!message) throw createServiceError(404, "message_not_found")
-    return toMessage(message, null, null)
+    const result = await getMessage(message.id)
+    await publishMessageEvent(
+      message.conversationId,
+      "message.deleted",
+      message.id,
+      result
+    )
+    return result
   } catch (error) {
     throw error
   }

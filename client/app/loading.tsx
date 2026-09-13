@@ -1,9 +1,5 @@
-import { Spinner } from "@gorth/primitive/pattern/spinner"
+import { LoadingScreen } from "@/features/shared/loading"
 
 export default function Loading() {
-  return (
-    <div className="flex min-h-svh items-center justify-center">
-      <Spinner variant="infinite" size={32} />
-    </div>
-  )
+  return <LoadingScreen />
 }

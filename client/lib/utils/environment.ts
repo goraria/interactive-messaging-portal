@@ -1,16 +1,23 @@
 // --- AUTH & API CONFIG ---
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-export const apiAuthUrl = process.env.NEXT_PUBLIC_AUTH_URL;
-export const redirectUrl = process.env.NEXT_PUBLIC_ALLOWED_REDIRECT_ORIGINS;
-export const ssoOAuthClientId =
-  process.env.NEXT_PUBLIC_SSO_OAUTH_CLIENT_ID ??
-  "gorth-interactive-messaging-portal";
+export const nodeEnv = process.env.NODE_ENV!
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL!
+export const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL!
+export const clientUrl = process.env.NEXT_PUBLIC_CLIENT_URL!
+export const authUrl = process.env.NEXT_PUBLIC_AUTH_URL!
+export const ssoServerUrl = process.env.NEXT_PUBLIC_SSO_SERVER_URL!
+export const ssoClientUrl = process.env.NEXT_PUBLIC_SSO_CLIENT_URL!
+export const ssoOAuthClientId = process.env.NEXT_PUBLIC_SSO_OAUTH_CLIENT_ID!
+export const authSecret = process.env.NEXT_AUTH_SECRET!
+export const authMaxAge = process.env.NEXT_SESSION_MAX_AGE_SECONDS!
+export const accessTokenCookie = process.env.GORTH_ACCESS_TOKEN!
+export const refreshTokenCookie = process.env.GORTH_REFRESH_TOKEN!
+export const oauthStateCookie = process.env.GORTH_OAUTH_STATE!
+export const oauthCodeVerifierCookie = process.env.GORTH_OAUTH_CODE_VERIFIER!
+export const oauthReturnToCookie = process.env.GORTH_OAUTH_RETURN_TO!
+export const oauthIssuerCookie = process.env.GORTH_OAUTH_ISSUER!
 
 export const routes = {
-  login: process.env.NEXT_PUBLIC_SIGN_IN_DIRECT_URL ?? "http://localhost:3000/auth/sign-in",
-  register: process.env.NEXT_PUBLIC_SIGN_UP_DIRECT_URL ?? "http://localhost:3000/auth/sign-up",
-  setting: process.env.NEXT_PUBLIC_SETTING_DIRECT_URL ?? "/setting",
-} as const;
-
-// --- BETTER AUTH CONFIG ---
-export const betterAuthUrl = process.env.BETTER_AUTH_URL;
+  login: new URL("/auth/sign-in", ssoClientUrl).toString(),
+  register: new URL("/auth/sign-up", ssoClientUrl).toString(),
+  setting: new URL("/settings", ssoClientUrl).toString(),
+} as const

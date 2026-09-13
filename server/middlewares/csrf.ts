@@ -7,6 +7,11 @@
 
 import type { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
+import {
+  csrfEnabled,
+  csrfSecret,
+  isProduction,
+} from "@/lib/utils/environment";
 
 /**
  * In-memory CSRF token store (use Redis in production)
@@ -24,7 +29,7 @@ function generateCsrfToken(): string {
  * Hash token for storage
  */
 function hashToken(token: string): string {
-  const secret = process.env.EXPRESS_CSRF_SECRET || "default-csrf-secret";
+  const secret = csrfSecret || "default-csrf-secret";
   return crypto
     .createHmac("sha256", secret)
     .update(token)
@@ -102,7 +107,6 @@ export function csrfProtection(req: Request, res: Response, next: NextFunction) 
   }
 
   // Skip if CSRF is disabled
-  const csrfEnabled = process.env.EXPRESS_CSRF_ENABLED === "true";
   if (!csrfEnabled) {
     return next();
   }
@@ -155,9 +159,7 @@ export function attachCsrfToken(req: Request, res: Response, next: NextFunction)
   res.locals.csrfToken = token;
   
   // Set cookie
-  const csrfEnabled = process.env.EXPRESS_CSRF_ENABLED === "true";
-  const isProduction = process.env.EXPRESS_NODE_ENV === "production";
-  
+
   res.cookie("csrf-token", token, {
     httpOnly: false, // Allow JavaScript to read for AJAX requests
     secure: csrfEnabled && isProduction,
@@ -170,7 +172,7 @@ export function attachCsrfToken(req: Request, res: Response, next: NextFunction)
 
 /**
  * Express endpoint to get CSRF token
- * GET /api/csrf-token
+ * GET /csrf-token
  */
 export function csrfTokenEndpoint(req: Request, res: Response) {
   const token = getCsrfToken(req);
@@ -190,7 +192,6 @@ export function csrfDoubleSubmit(req: Request, res: Response, next: NextFunction
     return next();
   }
 
-  const csrfEnabled = process.env.EXPRESS_CSRF_ENABLED === "true";
   if (!csrfEnabled) {
     return next();
   }
@@ -252,4 +253,3 @@ export function conditionalCsrf(req: Request, res: Response, next: NextFunction)
   }
   return csrfProtection(req, res, next);
 }
-

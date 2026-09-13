@@ -15,5 +15,10 @@ export const AuthContext = createContext<AuthContextValue>({
 })
 
 export function useAuth() {
-  return useContext(AuthContext)
+  const auth = useContext(AuthContext)
+
+  return {
+    ...auth,
+    username: auth.account?.username ?? null,
+  }
 }

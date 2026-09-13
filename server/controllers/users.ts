@@ -32,7 +32,10 @@ export async function getCurrentUser(_request: Request, response: Response) {
   try {
     const authUser = getVerifiedUser(response)
     if (!authUser) return response.status(401).json({ error: "unauthorized" })
-    return sendData(response, await getCurrentUserService(authUser))
+    const user = await getCurrentUserService(authUser)
+    return user
+      ? sendData(response, user)
+      : response.status(404).json({ error: "user_not_found" })
   } catch (error) {
     return sendControllerError(response, error)
   }

@@ -12,24 +12,21 @@ import {
   CommandList,
 } from "@gorth/primitive/default/command"
 import { MessagesSquare, Send } from "@gorth/primitive/cores/lucide"
-import { useQueryClient } from "@gorth/primitive/cores/tanstack/query"
-import { ConversationItem } from "@/components/conversation/message/conversation-item"
+import { ConversationItem } from "@/components/conversation/conversation-item"
 import { ConversationState } from "@/components/conversation/conversation-state"
 import { useAuth } from "@/hooks/use-auth"
 import { useUser } from "@/hooks/use-user"
 import { visitor } from "@/lib/utils/constant"
 import {
-  addConversationMember,
-  chatQueryKeys,
-  createConversation,
+  useAddConversationMemberMutation,
   useConversationsQuery,
+  useCreateConversationMutation,
   useUsersQuery,
 } from "@/services/chat"
 import type { User } from "@/schemas/chat"
 
 export default function ChatPage() {
   const router = useRouter()
-  const queryClient = useQueryClient()
   const auth = useAuth()
   const { user, loading: userLoading } = useUser()
   const displayName = user?.name ?? visitor.name
@@ -38,12 +35,22 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null)
   const usersQuery = useUsersQuery(Boolean(user))
   const conversationsQuery = useConversationsQuery(Boolean(user))
+  const [createConversation, createConversationState] =
+    useCreateConversationMutation()
+  const [addConversationMember, addConversationMemberState] =
+    useAddConversationMemberMutation()
   const users = (usersQuery.data ?? []).filter(
     (candidate) => candidate.id !== user?.id
   )
 
   async function openConversation(selectedUser: User) {
-    if (!user || selectedUserId) return
+    if (
+      !user ||
+      selectedUserId ||
+      createConversationState.isLoading ||
+      addConversationMemberState.isLoading
+    )
+      return
 
     setSelectedUserId(selectedUser.id)
     setError(null)
@@ -65,21 +72,18 @@ export default function ChatPage() {
         type: "direct",
         title: selectedUser.name,
         createdById: user.id,
-      })
+      }).unwrap()
 
       await Promise.all([
-        addConversationMember(conversation.id, {
-          userId: user.id,
-          role: "owner",
-        }),
-        addConversationMember(conversation.id, {
-          userId: selectedUser.id,
-          role: "member",
-        }),
+        addConversationMember({
+          conversationId: conversation.id,
+          input: { userId: user.id, role: "owner" },
+        }).unwrap(),
+        addConversationMember({
+          conversationId: conversation.id,
+          input: { userId: selectedUser.id, role: "member" },
+        }).unwrap(),
       ])
-      await queryClient.invalidateQueries({
-        queryKey: chatQueryKeys.conversations,
-      })
       router.push(`/chat/${conversation.id}`)
     } catch (cause) {
       setError(

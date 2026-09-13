@@ -22,6 +22,8 @@ import {
   SidebarFooter,
 } from "@gorth/primitive/custom/sidebar"
 import { NavMaster } from "@gorth/primitive/dashboard/nav-main"
+import { cn } from "@gorth/primitive/lib/utils"
+import { useLayout } from "@gorth/primitive/providers/layout"
 import { useUser } from "@/hooks/use-user"
 import { infoSidebar } from "@/lib/utils/constant"
 import { getConversationPeer } from "@/lib/utils/conversation"
@@ -29,6 +31,7 @@ import { getInitials, readRouteId } from "@/lib/utils/formatter"
 import { useConversationQuery } from "@/services/chat"
 
 export function InfoSidebar() {
+  const { variant } = useLayout()
   const params = useParams<{ id?: string | string[] }>()
   const conversationId = readRouteId(params.id)
   const { user } = useUser()
@@ -57,7 +60,13 @@ export function InfoSidebar() {
   return (
     <Sidebar
       side="right"
-      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
+      variant={variant}
+      collapsible="offcanvas"
+      className={cn(
+        "absolute! inset-y-0! h-full! *:data-[sidebar=sidebar]:overflow-hidden",
+        variant === "inset" &&
+          "*:data-[sidebar=sidebar]:rounded-lg"
+      )}
     >
       <SidebarHeader className="items-center gap-4 border-b p-6 text-center">
         <Avatar>

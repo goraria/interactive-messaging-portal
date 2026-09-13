@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Button, Input, Label, Textarea } from "@/components/primitive/default"
-import { toast } from "@gorth/primitive/cores/sonner"
+import { Label } from "@gorth/primitive/default/label"
+import { Input } from "@gorth/primitive/default/input"
+import { Textarea } from "@gorth/primitive/default/textarea"
+import { Button } from "@gorth/primitive/custom/button"
+import { toast } from "@gorth/primitive/custom/toast"
 import { useAuth } from "@/hooks/use-auth"
 import {
   normalizeRequestRecord,
@@ -55,7 +58,7 @@ export default function Page() {
 
     if (params === null || body === null || headers === null) return
     if (!Number.isFinite(timeout) || timeout <= 0) {
-      toast.error("Timeout must be a number greater than 0")
+      toast.add({ type: "error", description: "Timeout must be a number greater than 0" })
       return
     }
 
@@ -68,9 +71,9 @@ export default function Page() {
     setRequestArg(nextArg)
     try {
       await runDemo(nextArg).unwrap()
-      toast.success("Demo request sent successfully")
+      toast.add({ type: "success", description: "Demo request sent successfully" })
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Request failed")
+      toast.add({ type: "error", description: error instanceof Error ? error.message : "Request failed" })
     }
   }
 
