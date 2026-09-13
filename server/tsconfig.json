@@ -22,15 +22,9 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "incremental": false
   },
-  "include": ["app/main.ts", "vite.config.ts", "express-env.d.ts", "**/*.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    ".express",
-    "app/index.ts",
-    "lib/prisma/**",
-    "lib/supabase/**"
-  ]
+  "include": ["vite-env.d.ts", "**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

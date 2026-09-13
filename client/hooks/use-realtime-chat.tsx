@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { Message as AblyMessage } from "ably"
+import type { Message as AblyMessage } from "@gorth/structure/cores/ably/index"
 import { useQueryClient } from "@gorth/primitive/cores/tanstack/query"
 import { createAblyClient, getMessageChannelName } from "@/lib/ably/client"
 import {
@@ -75,14 +75,14 @@ export function useRealtimeChat({
             !conversation.lastMessage ||
             conversation.lastMessage.id === latestMessage.id ||
             new Date(latestMessage.createdAt).getTime() >=
-              new Date(conversation.lastMessage.createdAt).getTime()
+            new Date(conversation.lastMessage.createdAt).getTime()
 
           return shouldUpdate
             ? {
-                ...conversation,
-                lastMessage: latestMessage,
-                updatedAt: latestMessage.createdAt,
-              }
+              ...conversation,
+              lastMessage: latestMessage,
+              updatedAt: latestMessage.createdAt,
+            }
             : conversation
         }
 
@@ -95,16 +95,16 @@ export function useRealtimeChat({
           (current) =>
             current
               ? current
-                  .map((conversation) =>
-                    conversation.id === conversationId
-                      ? updateConversation(conversation)
-                      : conversation
-                  )
-                  .toSorted(
-                    (left, right) =>
-                      new Date(right.updatedAt).getTime() -
-                      new Date(left.updatedAt).getTime()
-                  )
+                .map((conversation) =>
+                  conversation.id === conversationId
+                    ? updateConversation(conversation)
+                    : conversation
+                )
+                .toSorted(
+                  (left, right) =>
+                    new Date(right.updatedAt).getTime() -
+                    new Date(left.updatedAt).getTime()
+                )
               : current
         )
       }

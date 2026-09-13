@@ -121,6 +121,8 @@ export function configureDevelopmentServer(server: ViteDevServer): void {
     }, 0)
   })
 
+  // Keep request logging in Vite's host process. Logging from a module loaded
+  // through ssrLoadModule serializes ANSI escape codes as literal text.
   server.middlewares.use(morganMiddleware())
 
   server.middlewares.use(async (req, res, next) => {
