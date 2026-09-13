@@ -1,4 +1,4 @@
-import { Rest } from "ably"
+import { Rest } from "@gorth/structure/cores/ably/index"
 
 import { ablyApiKey } from "@/lib/utils/environment"
 

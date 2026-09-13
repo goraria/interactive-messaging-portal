@@ -1,4 +1,4 @@
-import { Realtime } from "ably"
+import { Realtime } from "@gorth/structure/cores/ably/index"
 
 export function getMessageChannelName(conversationId: string) {
   return `chat:message:${conversationId}`
