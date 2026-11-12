@@ -1,0 +1,20 @@
+import { defineConfig } from "drizzle-kit"
+import dotenv from "dotenv"
+
+import { databaseUrl } from "@/utils/environment"
+
+dotenv.config({
+  path: ".env.local",
+  override: false,
+  debug: false,
+  quiet: true,
+})
+
+export default defineConfig({
+  out: "./database/drizzle",
+  schema: "./database/schema.ts",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: databaseUrl!,
+  },
+})

@@ -1,0 +1,14 @@
+name: Shared library integration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shared-contracts:
+    uses: gorth-io/ecosystem/.github/workflows/shared-consumer.yml@main

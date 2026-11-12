@@ -1,21 +1,71 @@
 {
-  "name": "@gorth/interactive-messaging-portal",
-  "version": "0.3.0",
+  "name": "@gorth-io/interactive-messaging-portal",
+  "version": "0.0.0-alpha.0",
   "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "turbo format",
-    "typecheck": "turbo typecheck"
+    "dev": "next dev --port 3030",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "check:deployment": "bun scripts/check-deployment.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cloud": "bun scripts/test-cloud.mjs",
+    "db:migrate-chat": "bun scripts/migrate-chat.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate-auth": "bun scripts/migrate-better-auth.mjs"
+  },
+  "dependencies": {
+    "@gorth-io/primitive": "0.0.0-alpha.10",
+    "@gorth-io/principle": "0.0.0-alpha.10",
+    "@gorth-io/structure": "0.0.0-alpha.10",
+    "@hono/bun": "^1.0.1",
+    "@hono/node-server": "^2.1.7",
+    "@hono/vercel": "^1.0.1",
+    "@types/ws": "^8.18.2",
+    "@vercel/functions": "^3.11.1",
+    "@vercel/otel": "^2.3.0",
+    "@vercel/queue": "0.11.0",
+    "better-auth": "^1.7.21",
+    "drizzle-orm": "1.0.0-rc.4",
+    "hono": "^4.13.18",
+    "next": "16.4.6",
+    "next-themes": "^0.4.6",
+    "postgres": "^4.1.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "server-only": "^0.0.1",
+    "ws": "^8.22.2"
   },
   "devDependencies": {
-    "prettier": "^3.9.6",
-    "turbo": "^2.10.11",
-    "typescript": "^5.9.3"
+    "@next/env": "16.4.6",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "drizzle-kit": "1.0.0-rc.4",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.4.6",
+    "postcss": "^8.5.32",
+    "prettier": "^3.10.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.0"
   },
-  "engines": {
-    "node": ">=24"
-  },
-  "packageManager": "pnpm@10.33.4"
+  "bun": {
+    "onlyBuiltDependencies": [
+      "@gorth-io/primitive",
+      "@gorth-io/principle",
+      "@gorth-io/structure",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
 }

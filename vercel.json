@@ -1,0 +1,20 @@
+{
+  "fluid": true,
+  "buildCommand": "bun run check:deployment && bun run build",
+  "functions": {
+    "app/(api)/background/delivery/route.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "chat-outbox"
+        }
+      ]
+    }
+  },
+  "crons": [
+    {
+      "path": "/background/recover",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

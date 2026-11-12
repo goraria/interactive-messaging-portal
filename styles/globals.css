@@ -1,0 +1,18 @@
+@import "tailwindcss" source(none);
+@import "@gorth-io/primitive/globals.css";
+
+@source "../app";
+@source "../components";
+@source "../features";
+@source "../hooks";
+@source "../layouts";
+@source "../providers";
+@source "../utils/client";
+
+@layer utilities {
+  .chat-shell[data-layout-width="wide"] > [data-slot="layout-header"][data-layout="floating"] > div {
+    width: 100%;
+    max-width: none;
+    padding-inline: calc(var(--spacing) * 2);
+  }
+}
