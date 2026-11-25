@@ -1,13 +1,13 @@
-import { z } from "@gorth-io/structure/cores/zod"
+import { z } from "@gorth-com/structure/cores/zod";
 
 export const notificationPrioritySchema = z.enum([
   "low",
   "normal",
   "high",
   "urgent",
-])
+]);
 
-const nullableTimestampSchema = z.string().nullable()
+const nullableTimestampSchema = z.string().nullable();
 
 export const notificationSchema = z.object({
   id: z.string().uuid(),
@@ -28,7 +28,7 @@ export const notificationSchema = z.object({
   expiresAt: nullableTimestampSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
-})
+});
 
 export const notificationPageSchema = z.object({
   data: z.array(notificationSchema),
@@ -38,16 +38,16 @@ export const notificationPageSchema = z.object({
     total: z.number().int().nonnegative(),
     hasMore: z.boolean(),
   }),
-})
+});
 
 export const unreadNotificationCountSchema = z.object({
   count: z.number().int().nonnegative(),
-})
+});
 
 export const notificationUpdateResultSchema = z.object({
   updated: z.number().int().nonnegative(),
-})
+});
 
-export type Notification = z.infer<typeof notificationSchema>
-export type NotificationPage = z.infer<typeof notificationPageSchema>
-export type NotificationPriority = z.infer<typeof notificationPrioritySchema>
+export type Notification = z.infer<typeof notificationSchema>;
+export type NotificationPage = z.infer<typeof notificationPageSchema>;
+export type NotificationPriority = z.infer<typeof notificationPrioritySchema>;

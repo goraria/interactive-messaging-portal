@@ -1,71 +1,71 @@
-"use client"
+"use client";
 import {
   loadStripePayment,
   type PaymentElements,
   type StripePaymentClient,
-} from "@/lib/stripe-payment"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { useEffect, useRef, useState } from "react"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@/lib/stripe-payment";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { useEffect, useRef, useState } from "react";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 export function StripePayment({
   clientSecret,
   publishableKey,
   onComplete,
 }: {
-  clientSecret: string
-  publishableKey: string
-  onComplete: () => Promise<unknown>
+  clientSecret: string;
+  publishableKey: string;
+  onComplete: () => Promise<unknown>;
 }) {
-  const mount = useRef<HTMLDivElement>(null)
-  const client = useRef<StripePaymentClient | null>(null)
-  const elements = useRef<PaymentElements | null>(null)
-  const [ready, setReady] = useState(false)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState("")
-  const networkError = useNetworkErrorToast(error)
+  const mount = useRef<HTMLDivElement>(null);
+  const client = useRef<StripePaymentClient | null>(null);
+  const elements = useRef<PaymentElements | null>(null);
+  const [ready, setReady] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const networkError = useNetworkErrorToast(error);
   useEffect(() => {
-    let active = true
-    let destroy: (() => void) | undefined
+    let active = true;
+    let destroy: (() => void) | undefined;
     void loadStripePayment()
       .then((factory) => {
-        if (!active || !mount.current) return
-        client.current = factory(publishableKey)
-        elements.current = client.current.elements({ clientSecret })
-        const element = elements.current.create("payment")
-        element.mount(mount.current)
-        destroy = () => element.destroy()
-        setReady(true)
+        if (!active || !mount.current) return;
+        client.current = factory(publishableKey);
+        elements.current = client.current.elements({ clientSecret });
+        const element = elements.current.create("payment");
+        element.mount(mount.current);
+        destroy = () => element.destroy();
+        setReady(true);
       })
       .catch((cause) => {
         if (active)
           setError(
-            cause instanceof Error ? cause.message : "Payment form failed"
-          )
-      })
+            cause instanceof Error ? cause.message : "Payment form failed",
+          );
+      });
     return () => {
-      active = false
-      destroy?.()
-    }
-  }, [clientSecret, publishableKey])
+      active = false;
+      destroy?.();
+    };
+  }, [clientSecret, publishableKey]);
   const confirm = async () => {
-    if (!client.current || !elements.current || pending) return
-    setPending(true)
-    setError("")
+    if (!client.current || !elements.current || pending) return;
+    setPending(true);
+    setError("");
     try {
       const result = await client.current.confirmPayment({
         elements: elements.current,
         confirmParams: { return_url: `${window.location.origin}/billing` },
         redirect: "if_required",
-      })
+      });
       if (result.error)
-        throw new Error(result.error.message ?? "Payment was not completed")
-      await onComplete()
+        throw new Error(result.error.message ?? "Payment was not completed");
+      await onComplete();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Payment failed")
+      setError(cause instanceof Error ? cause.message : "Payment failed");
     } finally {
-      setPending(false)
+      setPending(false);
     }
-  }
+  };
   return (
     <div className="space-y-3 rounded-lg border p-4">
       <div ref={mount} />
@@ -78,5 +78,5 @@ export function StripePayment({
         {pending ? "Confirming…" : "Confirm payment"}
       </Button>
     </div>
-  )
+  );
 }

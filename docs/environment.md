@@ -6,7 +6,7 @@ and do not configure the fullstack application.
 - `NEXT_PUBLIC_APP_URL`: Chat origin, locally `http://localhost:3030`.
 - `NEXT_PUBLIC_AUTH_URL`: fullstack SSO origin, locally `http://localhost:3000`.
   All OAuth endpoints use this origin; no separate port 8080 backend is needed.
-- `NEXT_PUBLIC_OAUTH_CLIENT_ID`: registered Chat OAuth client identifier.
+- `NEXT_OAUTH_CLIENT_ID`: registered Chat OAuth client identifier.
 - `NEXT_OAUTH_AUDIENCE`: Chat OAuth resource identifier.
 - `NEXT_OAUTH_NOTIFY_AUDIENCE`, `NEXT_OAUTH_RESOURCE_AUDIENCE` and
   `NEXT_OAUTH_DISCOVERY_AUDIENCE`: registered resource identifiers and HTTP

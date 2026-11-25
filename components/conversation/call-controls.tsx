@@ -1,6 +1,6 @@
-"use client"
-import { useEffect, useRef, useState } from "react"
-import { Button } from "@gorth-io/primitive/custom/button"
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Phone,
   Video,
@@ -8,250 +8,252 @@ import {
   Mic,
   MicOff,
   History,
-} from "@gorth-io/primitive/cores/lucide"
-import * as api from "@/services/client/messenger"
-import type { MessengerCall } from "@/schemas/client/messenger"
-import { applyPeerSignal } from "@/lib/webrtc/signaling"
-import { subscribeIncomingCalls } from "@/lib/realtime/call-client"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@gorth-com/primitive/cores/lucide";
+import * as api from "@/queries/messenger";
+import type { MessengerCall } from "@/schemas/client/messenger";
+import { applyPeerSignal } from "@/lib/webrtc/signaling";
+import { subscribeIncomingCalls } from "@/lib/realtime/call-client";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 export function ChatCallControls({
   conversationId,
   userId,
   enabled,
 }: {
-  conversationId: string
-  userId: string
-  enabled: boolean
+  conversationId: string;
+  userId: string;
+  enabled: boolean;
 }) {
-  const [calls, setCalls] = useState<MessengerCall[]>([])
-  const [incomingCalls, setIncomingCalls] = useState<MessengerCall[]>([])
-  const [active, setActive] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const networkError = useNetworkErrorToast(error)
-  const [busy, setBusy] = useState(false)
-  const [muted, setMuted] = useState(false)
-  const [history, setHistory] = useState(false)
-  const peer = useRef<RTCPeerConnection | null>(null)
-  const local = useRef<MediaStream | null>(null)
-  const remoteVideo = useRef<HTMLVideoElement | null>(null)
-  const localVideo = useRef<HTMLVideoElement | null>(null)
-  const connectedCall = useRef<string | null>(null)
-  const live = useRef(true)
-  const candidates = useRef<RTCIceCandidateInit[]>([])
+  const [calls, setCalls] = useState<MessengerCall[]>([]);
+  const [incomingCalls, setIncomingCalls] = useState<MessengerCall[]>([]);
+  const [active, setActive] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const networkError = useNetworkErrorToast(error);
+  const [busy, setBusy] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [history, setHistory] = useState(false);
+  const peer = useRef<RTCPeerConnection | null>(null);
+  const local = useRef<MediaStream | null>(null);
+  const remoteVideo = useRef<HTMLVideoElement | null>(null);
+  const localVideo = useRef<HTMLVideoElement | null>(null);
+  const connectedCall = useRef<string | null>(null);
+  const live = useRef(true);
+  const candidates = useRef<RTCIceCandidateInit[]>([]);
   function close() {
-    peer.current?.close()
-    peer.current = null
-    local.current?.getTracks().forEach((track) => track.stop())
-    local.current = null
-    connectedCall.current = null
-    candidates.current = []
-    if (localVideo.current) localVideo.current.srcObject = null
-    if (remoteVideo.current) remoteVideo.current.srcObject = null
+    peer.current?.close();
+    peer.current = null;
+    local.current?.getTracks().forEach((track) => track.stop());
+    local.current = null;
+    connectedCall.current = null;
+    candidates.current = [];
+    if (localVideo.current) localVideo.current.srcObject = null;
+    if (remoteVideo.current) remoteVideo.current.srcObject = null;
   }
   useEffect(() => {
-    live.current = true
+    live.current = true;
     const unsubscribe = enabled
-      ? subscribeIncomingCalls(userId, (incoming) => {
+      ? subscribeIncomingCalls(conversationId, userId, (incoming) => {
           if (live.current)
             setIncomingCalls(
-              incoming.filter((call) => call.conversationId === conversationId)
-            )
+              incoming.filter((call) => call.conversationId === conversationId),
+            );
         })
-      : undefined
+      : undefined;
     return () => {
-      live.current = false
-      unsubscribe?.()
-      const call = connectedCall.current
-      close()
-      if (call) void api.messengerSignal(call, "end").catch(() => undefined)
-    }
-  }, [conversationId, userId, enabled])
+      live.current = false;
+      unsubscribe?.();
+      const call = connectedCall.current;
+      close();
+      if (call) void api.messengerSignal(call, "end").catch(() => undefined);
+    };
+  }, [conversationId, userId, enabled]);
   useEffect(() => {
-    if (!enabled || !history) return
-    let stopped = false
-    let busyPoll = false
+    if (!enabled || !history) return;
+    let stopped = false;
+    let busyPoll = false;
     const poll = async () => {
-      if (busyPoll) return
-      busyPoll = true
+      if (busyPoll) return;
+      busyPoll = true;
       try {
-        const rows = await api.messengerCalls(conversationId)
-        if (!stopped) setCalls(rows)
+        const rows = await api.messengerCalls(conversationId);
+        if (!stopped) setCalls(rows);
       } catch {
         if (!stopped) {
-          setError("Call service unavailable")
+          setError("Call service unavailable");
         }
       } finally {
-        busyPoll = false
+        busyPoll = false;
       }
-    }
-    void poll()
+    };
+    void poll();
     return () => {
-      stopped = true
-    }
-  }, [conversationId, enabled, history])
+      stopped = true;
+    };
+  }, [conversationId, enabled, history]);
   useEffect(() => {
-    if (!active) return
+    if (!active) return;
     let stopped = false,
       busyPoll = false,
-      after = "0"
+      after = "0";
     const poll = async () => {
-      if (stopped || busyPoll) return
-      busyPoll = true
+      if (stopped || busyPoll) return;
+      busyPoll = true;
       try {
-        const result = await api.messengerSignals(active, after)
-        if (stopped) return
+        const result = await api.messengerSignals(active, after);
+        if (stopped) return;
         if (result.state === "ended") {
-          close()
-          setActive(null)
-          return
+          close();
+          setActive(null);
+          return;
         }
-        const connection = peer.current
-        if (!connection) return
+        const connection = peer.current;
+        if (!connection) return;
         for (const signal of result.data) {
-          if (stopped) return
+          if (stopped) return;
           await applyPeerSignal(
             connection,
             signal.kind,
             signal.payload,
             candidates.current,
-            (payload) => api.messengerSignal(active, "answer", payload)
-          )
+            (payload) => api.messengerSignal(active, "answer", payload),
+          );
           if (["end", "reject"].includes(signal.kind)) {
-            close()
-            setActive(null)
-            return
+            close();
+            setActive(null);
+            return;
           }
-          after = signal.sequence
+          after = signal.sequence;
         }
       } catch (cause) {
         if (!stopped) {
           if (
             [401, 403, 404].includes((cause as { status?: number }).status ?? 0)
           ) {
-            close()
-            setActive(null)
+            close();
+            setActive(null);
           }
-          setError("Unable to synchronize call; retrying")
+          setError("Unable to synchronize call; retrying");
         }
       } finally {
-        busyPoll = false
+        busyPoll = false;
       }
-    }
-    void poll()
-    const timer = setInterval(() => void poll(), 1000)
+    };
+    void poll();
+    const timer = setInterval(() => void poll(), 1000);
     return () => {
-      stopped = true
-      clearInterval(timer)
-    }
-  }, [active])
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [active]);
   async function setup(
     callId: string,
     kind: "audio" | "video",
     caller: boolean,
-    media: MediaStream
+    media: MediaStream,
   ) {
-    const config = await api.messengerIce()
+    const config = await api.messengerIce();
     if (!live.current) {
-      media.getTracks().forEach((track) => track.stop())
-      return
+      media.getTracks().forEach((track) => track.stop());
+      return;
     }
-    const connection = new RTCPeerConnection(config)
-    local.current = media
-    peer.current = connection
-    connectedCall.current = callId
-    for (const track of media.getTracks()) connection.addTrack(track, media)
+    const connection = new RTCPeerConnection(config);
+    local.current = media;
+    peer.current = connection;
+    connectedCall.current = callId;
+    for (const track of media.getTracks()) connection.addTrack(track, media);
     connection.ontrack = (event) => {
       if (remoteVideo.current)
         remoteVideo.current.srcObject =
-          event.streams[0] ?? new MediaStream([event.track])
-    }
+          event.streams[0] ?? new MediaStream([event.track]);
+    };
     connection.onicecandidate = (event) => {
       if (event.candidate)
         void api
           .messengerSignal(
             callId,
             "ice",
-            JSON.stringify(event.candidate.toJSON())
+            JSON.stringify(event.candidate.toJSON()),
           )
           .catch(() => {
-            if (live.current) setError("ICE signaling unavailable")
-          })
-    }
+            if (live.current) setError("ICE signaling unavailable");
+          });
+    };
     connection.onconnectionstatechange = () => {
       if (connection.connectionState === "failed" && caller) {
-        connection.restartIce()
+        connection.restartIce();
         void connection
           .createOffer({ iceRestart: true })
           .then(async (offer) => {
-            await connection.setLocalDescription(offer)
+            await connection.setLocalDescription(offer);
             await api.messengerSignal(
               callId,
               "offer",
-              JSON.stringify(connection.localDescription)
-            )
+              JSON.stringify(connection.localDescription),
+            );
           })
           .catch(() => {
             if (live.current)
-              setError("Call connection failed; check TURN configuration")
-          })
+              setError("Call connection failed; check TURN configuration");
+          });
       }
-    }
+    };
     if (caller) {
-      await connection.setLocalDescription(await connection.createOffer())
+      await connection.setLocalDescription(await connection.createOffer());
       await api.messengerSignal(
         callId,
         "offer",
-        JSON.stringify(connection.localDescription)
-      )
+        JSON.stringify(connection.localDescription),
+      );
     }
-    setActive(callId)
+    setActive(callId);
     requestAnimationFrame(() => {
-      if (localVideo.current) localVideo.current.srcObject = media
-    })
+      if (localVideo.current) localVideo.current.srcObject = media;
+    });
   }
   async function start(kind: "audio" | "video") {
-    if (busy || active) return
-    setBusy(true)
-    setError(null)
-    let media: MediaStream | null = null
+    if (busy || active) return;
+    setBusy(true);
+    setError(null);
+    let media: MediaStream | null = null;
     try {
       media = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: kind === "video",
-      })
+      });
       const call = await api.startMessengerCall(
         conversationId,
         kind,
-        crypto.randomUUID()
-      )
-      await setup(call.id, kind, true, media)
+        crypto.randomUUID(),
+      );
+      await setup(call.id, kind, true, media);
     } catch (cause) {
-      media?.getTracks().forEach((track) => track.stop())
-      close()
-      setError(cause instanceof Error ? cause.message : "Unable to start call")
+      media?.getTracks().forEach((track) => track.stop());
+      close();
+      setError(cause instanceof Error ? cause.message : "Unable to start call");
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
   async function accept(call: MessengerCall) {
-    if (busy) return
-    setBusy(true)
-    setError(null)
-    let media: MediaStream | null = null
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    let media: MediaStream | null = null;
     try {
       media = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: call.kind === "video",
-      })
-      await api.messengerSignal(call.id, "accept")
-      await setup(call.id, call.kind, false, media)
+      });
+      await api.messengerSignal(call.id, "accept");
+      await setup(call.id, call.kind, false, media);
     } catch (cause) {
-      media?.getTracks().forEach((track) => track.stop())
-      close()
-      setError(cause instanceof Error ? cause.message : "Unable to accept call")
+      media?.getTracks().forEach((track) => track.stop());
+      close();
+      setError(
+        cause instanceof Error ? cause.message : "Unable to accept call",
+      );
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
   const incoming = incomingCalls.find(
@@ -259,8 +261,8 @@ export function ChatCallControls({
       call.calleeId === userId &&
       call.state === "ringing" &&
       new Date(call.expiresAt) > new Date() &&
-      call.id !== active
-  )
+      call.id !== active,
+  );
   return (
     <>
       <Button
@@ -358,11 +360,11 @@ export function ChatCallControls({
               <Button
                 variant="outline"
                 onClick={() => {
-                  const next = !muted
+                  const next = !muted;
                   local.current
                     ?.getAudioTracks()
-                    .forEach((track) => (track.enabled = !next))
-                  setMuted(next)
+                    .forEach((track) => (track.enabled = !next));
+                  setMuted(next);
                 }}
               >
                 {muted ? <MicOff /> : <Mic />}
@@ -370,9 +372,11 @@ export function ChatCallControls({
               <Button
                 variant="destructive"
                 onClick={() => {
-                  void api.messengerSignal(active, "end").catch(() => undefined)
-                  close()
-                  setActive(null)
+                  void api
+                    .messengerSignal(active, "end")
+                    .catch(() => undefined);
+                  close();
+                  setActive(null);
                 }}
               >
                 <PhoneOff />
@@ -389,8 +393,8 @@ export function ChatCallControls({
             <Button
               variant="ghost"
               onClick={() => {
-                setError(null)
-                setHistory(false)
+                setError(null);
+                setHistory(false);
               }}
             >
               Dismiss
@@ -399,5 +403,5 @@ export function ChatCallControls({
         </section>
       ) : null}
     </>
-  )
+  );
 }

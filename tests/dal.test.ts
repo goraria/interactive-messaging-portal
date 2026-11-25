@@ -1,16 +1,16 @@
-import { beforeEach, expect, it, vi } from "vitest"
-import { AuthError } from "@gorth-io/structure/modules/auth/server"
-const fixture = vi.hoisted(() => ({ identity: vi.fn(), credentials: vi.fn() }))
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
-vi.mock("@/services/session", () => ({
-  readAppIdentity: fixture.identity,
-  readAppCredentials: fixture.credentials,
-}))
-import { readSession } from "@/lib/auth/dal"
+import { beforeEach, expect, it, vi } from "vitest";
+import { AuthError } from "@gorth-com/structure/modules/auth/server";
+const fixture = vi.hoisted(() => ({ identity: vi.fn(), credentials: vi.fn() }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
+vi.mock("@/models/session", () => ({
+  rawReadAppIdentity: fixture.identity,
+  rawReadAppCredentials: fixture.credentials,
+}));
+import { readSession } from "@/lib/auth/dal";
 beforeEach(() => {
-  fixture.identity.mockReset()
-  fixture.credentials.mockReset()
-})
+  fixture.identity.mockReset();
+  fixture.credentials.mockReset();
+});
 it("reads native local identity without a self-fetch, exposes SSO sub and no OAuth tokens", async () => {
   fixture.identity.mockResolvedValue({
     subject: "sso-sub",
@@ -23,7 +23,7 @@ it("reads native local identity without a self-fetch, exposes SSO sub and no OAu
       image: null,
       syncedAt: new Date(),
     },
-  })
+  });
   expect(await readSession()).toEqual({
     user: {
       id: "sso-sub",
@@ -33,12 +33,12 @@ it("reads native local identity without a self-fetch, exposes SSO sub and no OAu
       image: null,
     },
     expiresAt: 123,
-  })
-  expect(fixture.credentials).not.toHaveBeenCalled()
-})
+  });
+  expect(fixture.credentials).not.toHaveBeenCalled();
+});
 it("distinguishes signed-out from unavailable native session storage", async () => {
-  fixture.identity.mockResolvedValue(null)
-  expect(await readSession()).toBeNull()
-  fixture.identity.mockRejectedValue(new AuthError("unavailable"))
-  await expect(readSession()).rejects.toMatchObject({ code: "unavailable" })
-})
+  fixture.identity.mockResolvedValue(null);
+  expect(await readSession()).toBeNull();
+  fixture.identity.mockRejectedValue(new AuthError("unavailable"));
+  await expect(readSession()).rejects.toMatchObject({ code: "unavailable" });
+});

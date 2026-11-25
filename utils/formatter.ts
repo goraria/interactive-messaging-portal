@@ -130,3 +130,39 @@ export function formatChatConversation<T extends Record<string, unknown>>(
     mutedUntil: formatChatTimestamp(row.mutedUntil),
   }
 }
+
+const internalApiDomains = new Set([
+  "user",
+  "conversation",
+  "message",
+  "attachment",
+  "block",
+  "call",
+  "event",
+  "lab",
+  "hello",
+  "param",
+  "query",
+  "health",
+])
+
+const externalApiDomains = new Set([
+  "billing",
+  "discovery",
+  "insight",
+  "media",
+  "notification",
+  "payment",
+  "resource",
+  "commerce",
+  "socket",
+])
+
+// Canonicalize dynamic same-origin query and mutation paths.
+export function formatApiPath(path: string) {
+  const domain = /^\/([a-z-]+)(?:[/?#]|$)/.exec(path)?.[1]
+  if (!domain) return path
+  if (internalApiDomains.has(domain)) return "/internal" + path
+  if (externalApiDomains.has(domain)) return "/external" + path
+  return path
+}

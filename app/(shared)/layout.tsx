@@ -1,15 +1,19 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import Link from "next/link"
-import { SidebarProvider } from "@gorth-io/primitive/custom/sidebar"
-import { Header } from "@gorth-io/primitive/layouts/header"
-import { Footer } from "@gorth-io/primitive/layouts/footer"
-import { Building2, MessageCircle, Users } from "@gorth-io/primitive/cores/lucide"
-import { AppBrand } from "@/components/app-brand"
-import { useAuth } from "@/hooks/use-auth"
-import { useUser } from "@/hooks/use-user"
-import { appGlobal, sharedNavbar, visitor } from "@/utils/constant"
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { SidebarProvider } from "@gorth-com/primitive/custom/sidebar";
+import { Header } from "@gorth-com/primitive/layouts/header";
+import { Footer } from "@gorth-com/primitive/layouts/footer";
+import {
+  Building2,
+  MessageCircle,
+  Users,
+} from "@gorth-com/primitive/cores/lucide";
+import { AppBrand } from "@/components/app-brand";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
+import { appGlobal, sharedNavbar, visitor } from "@/utils/constant";
 
 const footerNavigation = [
   {
@@ -42,11 +46,11 @@ const footerNavigation = [
       { title: "Terms", url: "/#security" },
     ],
   },
-]
+];
 
 export default function SharedLayout({ children }: { children: ReactNode }) {
-  const auth = useAuth()
-  const { user } = useUser()
+  const auth = useAuth();
+  const { user } = useUser();
 
   return (
     <SidebarProvider>
@@ -105,5 +109,5 @@ export default function SharedLayout({ children }: { children: ReactNode }) {
         />
       </div>
     </SidebarProvider>
-  )
+  );
 }

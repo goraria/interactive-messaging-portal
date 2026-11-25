@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { Button } from "@gorth-io/primitive/custom/button"
-import { useAuth } from "@/hooks/use-auth"
-import { useLabAuthQuery } from "@/services/client/lab"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
+import { Button } from "@gorth-com/primitive/custom/button";
+import { useAuth } from "@/hooks/use-auth";
+import { useLabAuthQuery } from "@/queries/lab";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
 
 export default function LabPage() {
-  const { authenticated, loading, login } = useAuth()
-  const query = useLabAuthQuery(authenticated)
-  const result = query.data ?? query.error?.message ?? null
+  const { authenticated, loading, signingIn, login } = useAuth();
+  const query = useLabAuthQuery(authenticated);
+  const result = query.data ?? query.error?.message ?? null;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
@@ -20,7 +20,13 @@ export default function LabPage() {
       </section>
 
       {!loading && !authenticated ? (
-        <Button onClick={() => login("/lab")}>Sign in with SSO</Button>
+        <Button
+          disabled={signingIn}
+          aria-busy={signingIn}
+          onClick={() => login("/lab")}
+        >
+          Sign in with SSO
+        </Button>
       ) : null}
 
       <Button
@@ -39,5 +45,5 @@ export default function LabPage() {
         {JSON.stringify(result, null, 2)}
       </pre>
     </main>
-  )
+  );
 }

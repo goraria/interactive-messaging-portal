@@ -1,26 +1,29 @@
-"use client"
+"use client";
 
-import React from "react"
-import { SidebarProvider, SidebarInset } from "@gorth-io/primitive/custom/sidebar"
-import { Dashbar } from "@/layouts/dashbar"
-import { DashboardFooter } from "@/layouts/footer"
-import { AppSidebar } from "@gorth-io/primitive/dashboard/app-sidebar"
-import { settingSidebar, visitor } from "@/utils/constant"
-import { useAuth } from "@/hooks/use-auth"
-import { useUser } from "@/hooks/use-user"
-import { AuthGuard } from "@/layouts/guard"
+import React from "react";
+import {
+  SidebarProvider,
+  SidebarInset,
+} from "@gorth-com/primitive/custom/sidebar";
+import { Dashbar } from "@/layouts/dashbar";
+import { DashboardFooter } from "@/layouts/footer";
+import { AppSidebar } from "@gorth-com/primitive/dashboard/app-sidebar";
+import { settingSidebar, visitor } from "@/utils/constant";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
+import { AuthGuard } from "@/layouts/guard";
 
 export default function MainLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  const authControls = useAuth()
-  const { user } = useUser()
+  const authControls = useAuth();
+  const { user } = useUser();
   const sidebar = {
     ...settingSidebar,
     user: user ?? visitor,
-  }
+  };
 
   return (
     <AuthGuard>
@@ -36,5 +39,5 @@ export default function MainLayout({
         </SidebarInset>
       </SidebarProvider>
     </AuthGuard>
-  )
+  );
 }

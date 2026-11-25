@@ -1,8 +1,6 @@
 {
   "id": "6fab4173-e4fd-4d27-9e14-f0dc3d6a352b",
-  "prevIds": [
-    "96c82432-32dd-464b-baba-47857773f82c"
-  ],
+  "prevIds": ["96c82432-32dd-464b-baba-47857773f82c"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -13,9 +11,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -219,9 +215,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",
@@ -229,12 +223,7 @@
       "entityType": "uniques"
     },
     {
-      "values": [
-        "google",
-        "github",
-        "facebook",
-        "credentials"
-      ],
+      "values": ["google", "github", "facebook", "credentials"],
       "name": "provider_enum",
       "schema": "public",
       "entityType": "enums"

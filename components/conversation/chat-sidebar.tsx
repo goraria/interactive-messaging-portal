@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import * as React from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -15,10 +15,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@gorth-io/primitive/custom/sidebar"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { Label } from "@gorth-io/primitive/default/label"
-import { Switch } from "@gorth-io/primitive/default/switch"
+} from "@gorth-com/primitive/custom/sidebar";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Label } from "@gorth-com/primitive/default/label";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import {
   Command as CommandRoot,
   CommandEmpty,
@@ -26,9 +26,9 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@gorth-io/primitive/custom/command"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { useLayout } from "@gorth-io/primitive/providers/layout"
+} from "@gorth-com/primitive/custom/command";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { useLayout } from "@gorth-com/primitive/providers/layout";
 import {
   Dot,
   Command as CommandIcon,
@@ -40,54 +40,54 @@ import {
   TriangleAlert,
   X,
   type LucideIcon,
-} from "@gorth-io/primitive/cores/lucide"
-import { NavIdentity, NavUser } from "@gorth-io/primitive/dashboard/nav-user"
-import { ConversationState } from "@/components/conversation/conversation-state"
-import type { ChatConversation } from "@/utils/constant"
-import type { useAuth } from "@/hooks/use-auth"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@gorth-com/primitive/cores/lucide";
+import { NavIdentity, NavUser } from "@gorth-com/primitive/dashboard/nav-user";
+import { ConversationState } from "@/components/conversation/conversation-state";
+import type { ChatConversation } from "@/utils/constant";
+import type { useAuth } from "@/hooks/use-auth";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 type SidebarData = {
   user: {
-    name: string
-    email: string
-    avatar: string
-  }
+    name: string;
+    email: string;
+    avatar: string;
+  };
   brand?: {
-    name: string
-    logo?: string
-    plan?: string
-  }
+    name: string;
+    logo?: string;
+    plan?: string;
+  };
   navMain: Array<{
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
-  }>
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isActive?: boolean;
+  }>;
   navDropdown: Array<{
-    title: string
-    url: string
-    icon: LucideIcon
-  }>
+    title: string;
+    url: string;
+    icon: LucideIcon;
+  }>;
   navSignal: Array<{
-    title: string
-    url: string
-    icon: LucideIcon
-  }>
-  navMessage: ChatConversation[]
-}
+    title: string;
+    url: string;
+    icon: LucideIcon;
+  }>;
+  navMessage: ChatConversation[];
+};
 
 type AuthControls = Pick<
   ReturnType<typeof useAuth>,
   "authenticated" | "loading" | "logout" | "login" | "register"
->
+>;
 
 interface ChatSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  data: SidebarData
-  auth: AuthControls
-  conversationsLoading?: boolean
-  conversationsError?: string | null
-  onRetryConversations?: () => void
+  data: SidebarData;
+  auth: AuthControls;
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
 }
 
 export function ChatSidebar({
@@ -99,14 +99,14 @@ export function ChatSidebar({
   className,
   ...props
 }: ChatSidebarProps) {
-  const pathname = usePathname()
-  const networkError = useNetworkErrorToast(conversationsError)
-  const router = useRouter()
-  const [activeItem, setActiveItem] = React.useState(data.navMain[0])
-  const [unreadOnly, setUnreadOnly] = React.useState(false)
-  const [searching, setSearching] = React.useState(false)
-  const { setOpen } = useSidebar()
-  const { collapsible, variant } = useLayout()
+  const pathname = usePathname();
+  const networkError = useNetworkErrorToast(conversationsError);
+  const router = useRouter();
+  const [activeItem, setActiveItem] = React.useState(data.navMain[0]);
+  const [unreadOnly, setUnreadOnly] = React.useState(false);
+  const [searching, setSearching] = React.useState(false);
+  const { setOpen } = useSidebar();
+  const { collapsible, variant } = useLayout();
   const conversations = React.useMemo(
     () =>
       data.navMessage.filter(
@@ -117,10 +117,10 @@ export function ChatSidebar({
           (!unreadOnly || conversation.unread) &&
           (activeItem?.title !== "Groups" ||
             conversation.subject === "group" ||
-            conversation.subject === "channel")
+            conversation.subject === "channel"),
       ),
-    [data.navMessage, unreadOnly, activeItem]
-  )
+    [data.navMessage, unreadOnly, activeItem],
+  );
 
   return (
     <Sidebar
@@ -129,7 +129,7 @@ export function ChatSidebar({
       variant={variant}
       className={cn(
         "overflow-hidden *:data-[sidebar=sidebar]:flex-row *:data-[sidebar=sidebar]:overflow-hidden",
-        className
+        className,
       )}
     >
       <Sidebar
@@ -180,11 +180,11 @@ export function ChatSidebar({
                       }}
                       onClick={() => {
                         if (item.url.startsWith("/")) {
-                          router.push(item.url)
-                          return
+                          router.push(item.url);
+                          return;
                         }
-                        setActiveItem(item)
-                        setOpen(true)
+                        setActiveItem(item);
+                        setOpen(true);
                       }}
                       isActive={activeItem?.title === item.title}
                       className="px-2.5"
@@ -208,7 +208,7 @@ export function ChatSidebar({
             auth={{
               ...auth,
               logout: async () => {
-                await auth.logout()
+                await auth.logout();
               },
             }}
             nav={{
@@ -329,8 +329,8 @@ export function ChatSidebar({
                               variant="plain"
                               showCheck={false}
                               onSelect={() => {
-                                setSearching(false)
-                                router.push(conversation.url)
+                                setSearching(false);
+                                router.push(conversation.url);
                               }}
                             >
                               <SidebarMenuButton
@@ -422,5 +422,5 @@ export function ChatSidebar({
         </CommandRoot>
       </Sidebar>
     </Sidebar>
-  )
+  );
 }

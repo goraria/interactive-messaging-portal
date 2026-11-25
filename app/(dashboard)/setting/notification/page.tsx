@@ -1,37 +1,37 @@
-"use client"
-import { useEffect, useState } from "react"
-import { Switch } from "@gorth-io/primitive/default/switch"
-import { Button } from "@gorth-io/primitive/custom/button"
+"use client";
+import { useEffect, useState } from "react";
+import { Switch } from "@gorth-com/primitive/default/switch";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   chatNotificationPreferences,
   setChatNotificationPreference,
   type ChatPreference,
-} from "@/services/client/chat-preferences"
+} from "@/queries/chat-preferences";
 export default function NotificationSetting() {
   const [preferences, setPreferences] = useState<ChatPreference[] | null>(null),
     [error, setError] = useState<string | null>(null),
-    [busy, setBusy] = useState(false)
+    [busy, setBusy] = useState(false);
   async function refresh() {
     try {
-      setPreferences(await chatNotificationPreferences())
-      setError(null)
+      setPreferences(await chatNotificationPreferences());
+      setError(null);
     } catch {
-      setError("Unable to load notification preferences")
+      setError("Unable to load notification preferences");
     }
   }
   useEffect(() => {
-    let stopped = false
+    let stopped = false;
     void chatNotificationPreferences()
       .then((result) => {
-        if (!stopped) setPreferences(result)
+        if (!stopped) setPreferences(result);
       })
       .catch(() => {
-        if (!stopped) setError("Unable to load notification preferences")
-      })
+        if (!stopped) setError("Unable to load notification preferences");
+      });
     return () => {
-      stopped = true
-    }
-  }, [])
+      stopped = true;
+    };
+  }, []);
   return (
     <section className="max-w-2xl space-y-5">
       <h1 className="text-2xl font-bold">Notification</h1>
@@ -57,20 +57,20 @@ export default function NotificationSetting() {
                 (row) =>
                   row.channel === channel &&
                   !row.enabled &&
-                  ["*", "chat.message"].includes(row.notificationType)
+                  ["*", "chat.message"].includes(row.notificationType),
               )
             }
             onCheckedChange={(enabled) => {
-              setBusy(true)
-              setError(null)
+              setBusy(true);
+              setError(null);
               void setChatNotificationPreference(channel, enabled)
                 .then(refresh)
                 .catch(() => setError("Preference was not saved"))
-                .finally(() => setBusy(false))
+                .finally(() => setBusy(false));
             }}
           />
         </label>
       ))}
     </section>
-  )
+  );
 }

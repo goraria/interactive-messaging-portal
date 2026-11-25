@@ -1,6 +1,6 @@
-"use client"
-import { useState } from "react"
-import { Button } from "@gorth-io/primitive/custom/button"
+"use client";
+import { useState } from "react";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Dialog,
   DialogTrigger,
@@ -10,14 +10,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@gorth-io/primitive/default/dialog"
-import { RadioGroup, RadioGroupItem } from "@gorth-io/primitive/custom/radio"
-import { Label } from "@gorth-io/primitive/default/label"
-import { Bell } from "@gorth-io/primitive/cores/lucide"
-import { messengerMutation } from "@/services/client/messenger"
-import { chatQueryKeys } from "@/services/client/chat"
-import { useQueryClient } from "@gorth-io/primitive/cores/tanstack/query"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@gorth-com/primitive/default/dialog";
+import { RadioGroup, RadioGroupItem } from "@gorth-com/primitive/custom/radio";
+import { Label } from "@gorth-com/primitive/default/label";
+import { Bell } from "@gorth-com/primitive/cores/lucide";
+import { messengerMutation } from "@/queries/messenger";
+import { chatQueryKeys } from "@/queries/chat";
+import { useQueryClient } from "@gorth-com/primitive/cores/tanstack/query";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 export function InfoMute({
   conversationId,
@@ -26,28 +26,28 @@ export function InfoMute({
   open: controlledOpen,
   onOpenChange,
 }: {
-  conversationId: string
-  muted: boolean
-  label?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  conversationId: string;
+  muted: boolean;
+  label?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [internalOpen, setInternalOpen] = useState(false)
-  const open = controlledOpen ?? internalOpen
-  const setOpen = onOpenChange ?? setInternalOpen
-  const [activity, setActivity] = useState(muted ? "none" : "all")
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const networkError = useNetworkErrorToast(error)
-  const client = useQueryClient()
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+  const [activity, setActivity] = useState(muted ? "none" : "all");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const networkError = useNetworkErrorToast(error);
+  const client = useQueryClient();
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (busy) return
-        setOpen(next)
-        setActivity(muted ? "none" : "all")
-        setError(null)
+        if (busy) return;
+        setOpen(next);
+        setActivity(muted ? "none" : "all");
+        setError(null);
       }}
     >
       <DialogTrigger
@@ -66,17 +66,17 @@ export function InfoMute({
         <form
           className="space-y-6"
           onSubmit={(event) => {
-            event.preventDefault()
-            if (busy) return
-            setBusy(true)
-            setError(null)
+            event.preventDefault();
+            if (busy) return;
+            setBusy(true);
+            setError(null);
             void messengerMutation(
-              "/chat/conversation/" + conversationId + "/preference",
+              "/conversation/" + conversationId + "/preference",
               "PATCH",
               {
                 mutedUntil:
                   activity === "none" ? "9999-12-31T23:59:59.000Z" : null,
-              }
+              },
             )
               .then(async () => {
                 await Promise.all([
@@ -86,17 +86,17 @@ export function InfoMute({
                   client.invalidateQueries({
                     queryKey: chatQueryKeys.conversations,
                   }),
-                ])
-                setOpen(false)
+                ]);
+                setOpen(false);
               })
               .catch((cause) =>
                 setError(
                   cause instanceof Error
                     ? cause.message
-                    : "Unable to save notifications"
-                )
+                    : "Unable to save notifications",
+                ),
               )
-              .finally(() => setBusy(false))
+              .finally(() => setBusy(false));
           }}
         >
           <DialogHeader>
@@ -162,5 +162,5 @@ export function InfoMute({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

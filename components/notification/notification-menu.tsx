@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@gorth-io/primitive/custom/button"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Popover,
   PopoverContent,
@@ -10,57 +10,57 @@ import {
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
-} from "@gorth-io/primitive/default/popover"
-import { ScrollArea } from "@gorth-io/primitive/default/scroll-area"
-import { Separator } from "@gorth-io/primitive/default/separator"
-import { Skeleton } from "@gorth-io/primitive/default/skeleton"
+} from "@gorth-com/primitive/default/popover";
+import { ScrollArea } from "@gorth-com/primitive/default/scroll-area";
+import { Separator } from "@gorth-com/primitive/default/separator";
+import { Skeleton } from "@gorth-com/primitive/default/skeleton";
 import {
   Archive,
   Bell,
   CheckCheck,
   Inbox,
   RefreshCw,
-} from "@gorth-io/primitive/cores/lucide"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import type { Notification } from "@/schemas/client/notification"
+} from "@gorth-com/primitive/cores/lucide";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import type { Notification } from "@/schemas/client/notification";
 import {
   useArchiveNotificationMutation,
   useMarkNotificationReadMutation,
   useNotificationsQuery,
   useUnreadNotificationCountQuery,
-} from "@/services/client/notification"
+} from "@/queries/notification";
 
 interface NotificationMenuProps {
-  enabled: boolean
+  enabled: boolean;
 }
 
 function resolveActionPath(value: string | null) {
-  if (!value?.startsWith("/") || value.startsWith("//")) return null
+  if (!value?.startsWith("/") || value.startsWith("//")) return null;
 
   try {
-    const url = new URL(value, window.location.origin)
+    const url = new URL(value, window.location.origin);
     return url.origin === window.location.origin
       ? `${url.pathname}${url.search}${url.hash}`
-      : null
+      : null;
   } catch {
-    return null
+    return null;
   }
 }
 
 function formatNotificationTime(value: string) {
-  const createdAt = new Date(value).getTime()
-  const elapsed = Date.now() - createdAt
+  const createdAt = new Date(value).getTime();
+  const elapsed = Date.now() - createdAt;
 
-  if (!Number.isFinite(createdAt)) return ""
-  if (elapsed < 60_000) return "Now"
-  if (elapsed < 3_600_000) return `${Math.floor(elapsed / 60_000)}m`
-  if (elapsed < 86_400_000) return `${Math.floor(elapsed / 3_600_000)}h`
-  if (elapsed < 604_800_000) return `${Math.floor(elapsed / 86_400_000)}d`
+  if (!Number.isFinite(createdAt)) return "";
+  if (elapsed < 60_000) return "Now";
+  if (elapsed < 3_600_000) return `${Math.floor(elapsed / 60_000)}m`;
+  if (elapsed < 86_400_000) return `${Math.floor(elapsed / 3_600_000)}h`;
+  if (elapsed < 604_800_000) return `${Math.floor(elapsed / 86_400_000)}d`;
 
   return new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
-  }).format(new Date(createdAt))
+  }).format(new Date(createdAt));
 }
 
 function NotificationItem({
@@ -69,18 +69,18 @@ function NotificationItem({
   onArchive,
   busy,
 }: {
-  notification: Notification
-  onOpen: (notification: Notification) => void
-  onArchive: (id: string) => void
-  busy: boolean
+  notification: Notification;
+  onOpen: (notification: Notification) => void;
+  onArchive: (id: string) => void;
+  busy: boolean;
 }) {
-  const unread = notification.readAt === null
+  const unread = notification.readAt === null;
 
   return (
     <div
       className={cn(
         "group flex items-start gap-2 border-b px-3 py-3 last:border-b-0",
-        unread && "bg-primary/5"
+        unread && "bg-primary/5",
       )}
     >
       <button
@@ -93,7 +93,7 @@ function NotificationItem({
             "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full",
             unread
               ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
+              : "bg-muted text-muted-foreground",
           )}
         >
           <Bell className="size-4" />
@@ -103,7 +103,7 @@ function NotificationItem({
             <span
               className={cn(
                 "line-clamp-2 flex-1 text-sm",
-                unread && "font-medium"
+                unread && "font-medium",
               )}
             >
               {notification.title}
@@ -131,7 +131,7 @@ function NotificationItem({
         <Archive className="size-4" />
       </Button>
     </div>
-  )
+  );
 }
 
 function NotificationListSkeleton() {
@@ -147,51 +147,51 @@ function NotificationListSkeleton() {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 export function NotificationMenu({ enabled }: NotificationMenuProps) {
-  const router = useRouter()
-  const [open, setOpen] = useState(false)
-  const [limit, setLimit] = useState(12)
-  const countQuery = useUnreadNotificationCountQuery(enabled)
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [limit, setLimit] = useState(12);
+  const countQuery = useUnreadNotificationCountQuery(enabled);
   const notificationsQuery = useNotificationsQuery(
     enabled && open && !countQuery.isError,
-    limit
-  )
-  const [markRead, markReadState] = useMarkNotificationReadMutation()
-  const [archive, archiveState] = useArchiveNotificationMutation()
-  const unreadCount = countQuery.data?.count ?? 0
-  const unavailable = countQuery.isError || notificationsQuery.isError
-  const notifications = notificationsQuery.data?.data ?? []
+    limit,
+  );
+  const [markRead, markReadState] = useMarkNotificationReadMutation();
+  const [archive, archiveState] = useArchiveNotificationMutation();
+  const unreadCount = countQuery.data?.count ?? 0;
+  const unavailable = countQuery.isError || notificationsQuery.isError;
+  const notifications = notificationsQuery.data?.data ?? [];
 
   const handleOpen = async (notification: Notification) => {
     if (!notification.readAt) {
       await markRead(notification.id)
         .unwrap()
-        .catch(() => undefined)
+        .catch(() => undefined);
     }
 
-    const actionPath = resolveActionPath(notification.actionUrl)
+    const actionPath = resolveActionPath(notification.actionUrl);
     if (actionPath) {
-      setOpen(false)
-      router.push(actionPath)
+      setOpen(false);
+      router.push(actionPath);
     }
-  }
+  };
 
   const handleArchive = (id: string) => {
     void archive(id)
       .unwrap()
-      .catch(() => undefined)
-  }
+      .catch(() => undefined);
+  };
 
   const handleMarkAllRead = () => {
     void markRead(undefined)
       .unwrap()
-      .catch(() => undefined)
-  }
+      .catch(() => undefined);
+  };
 
-  if (!enabled) return null
+  if (!enabled) return null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -320,5 +320,5 @@ export function NotificationMenu({ enabled }: NotificationMenuProps) {
         </ScrollArea>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

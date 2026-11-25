@@ -1,35 +1,35 @@
-"use client"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { Input } from "@gorth-io/primitive/default/input"
-import { Checkbox } from "@gorth-io/primitive/default/checkbox"
-import { createConversation, useUsersQuery } from "@/services/client/chat"
-import { useUser } from "@/hooks/use-user"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
+import { Checkbox } from "@gorth-com/primitive/default/checkbox";
+import { createConversation, useUsersQuery } from "@/queries/chat";
+import { useUser } from "@/hooks/use-user";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 export function NewGroup() {
   const router = useRouter(),
-    { user } = useUser()
+    { user } = useUser();
   const [open, setOpen] = useState(false),
     [name, setName] = useState(""),
     [selected, setSelected] = useState<string[]>([]),
     [error, setError] = useState<string | null>(null),
-    [busy, setBusy] = useState(false)
-  const users = useUsersQuery(open).data ?? []
-  const networkError = useNetworkErrorToast(error)
+    [busy, setBusy] = useState(false);
+  const users = useUsersQuery(open).data ?? [];
+  const networkError = useNetworkErrorToast(error);
   if (!open)
     return (
       <Button variant="outline" onClick={() => setOpen(true)}>
         New group
       </Button>
-    )
+    );
   return (
     <form
       className="w-full space-y-3 rounded-lg border p-4 text-left"
       onSubmit={(event) => {
-        event.preventDefault()
-        setBusy(true)
-        setError(null)
+        event.preventDefault();
+        setBusy(true);
+        setError(null);
         void createConversation({
           title: name,
           type: "group",
@@ -38,10 +38,10 @@ export function NewGroup() {
           .then((conversation) => router.push("/chat/" + conversation.id))
           .catch((cause) =>
             setError(
-              cause instanceof Error ? cause.message : "Unable to create group"
-            )
+              cause instanceof Error ? cause.message : "Unable to create group",
+            ),
           )
-          .finally(() => setBusy(false))
+          .finally(() => setBusy(false));
       }}
     >
       <Input
@@ -65,7 +65,7 @@ export function NewGroup() {
                   setSelected((current) =>
                     checked
                       ? [...current, candidate.id]
-                      : current.filter((id) => id !== candidate.id)
+                      : current.filter((id) => id !== candidate.id),
                   )
                 }
               />
@@ -81,5 +81,5 @@ export function NewGroup() {
         Cancel
       </Button>
     </form>
-  )
+  );
 }

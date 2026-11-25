@@ -1,13 +1,16 @@
-"use client"
-
-import NotFoundPage from "@gorth-io/primitive/pages/not-found"
+"use client";
 
 export default function GlobalError() {
   return (
-    <html>
+    <html lang="en">
       <body>
-        <NotFoundPage />
+        <main>
+          <h1>Something went wrong</h1>
+          <button type="button" onClick={() => window.location.reload()}>
+            Reload Chat
+          </button>
+        </main>
       </body>
     </html>
-  )
+  );
 }

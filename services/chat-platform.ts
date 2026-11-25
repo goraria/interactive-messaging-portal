@@ -26,7 +26,7 @@ const machineScopes = {
 }
 const grants = new Map<string, { token: string; expires: number }>()
 const inflight = new Map<string, Promise<string>>()
-export function trustedChatOrigin(raw: string) {
+export function rawTrustedChatOrigin(raw: string) {
   let url: URL
   try {
     url = new URL(raw)
@@ -47,34 +47,32 @@ export function trustedChatOrigin(raw: string) {
     throw createServiceError(503, "invalid_platform_origin")
   return url.origin
 }
-export async function chatBackendToken(domain: keyof typeof machineScopes) {
+export async function rawChatBackendToken(domain: keyof typeof machineScopes) {
   const existing = grants.get(domain)
   if (existing && existing.expires > Date.now() + 30000) return existing.token
   if (inflight.has(domain)) return inflight.get(domain)!
   const request = (async () => {
     try {
-      const method = environment.oauthTokenEndpointAuthMethod
       if (
-        !environment.serverOauthClientId ||
-        !environment.serverOauthClientSecret ||
-        !["client_secret_basic", "client_secret_post"].includes(method)
+        !environment.oauthClientId ||
+        !environment.oauthClientSecret
       )
         throw new Error()
       const endpoint = new URL(
         "/auth/oauth2/token",
-        trustedChatOrigin(environment.authUrl)
+        rawTrustedChatOrigin(environment.authUrl)
       ).href
       const input = await clientCredentialsTokenRequest({
         options: {
-          clientId: environment.serverOauthClientId,
-          clientSecret: environment.serverOauthClientSecret,
+          clientId: environment.oauthClientId,
+          clientSecret: environment.oauthClientSecret,
         },
         tokenEndpoint: endpoint,
         tokenEndpointAuth: {
-          method: method as "client_secret_basic" | "client_secret_post",
+          method: "client_secret_basic",
         },
         scope: machineScopes[domain],
-        resource: trustedChatOrigin(
+        resource: rawTrustedChatOrigin(
           domain === "chat" ? environment.oauthAudience : registry[domain]
         ),
       })
@@ -104,14 +102,14 @@ export async function chatBackendToken(domain: keyof typeof machineScopes) {
     inflight.delete(domain)
   }
 }
-export async function chatPlatformRequest<T>(
+export async function rawChatPlatformRequest<T>(
   domain: keyof typeof registry,
   path: string,
   method: "GET" | "POST" | "DELETE",
   body?: unknown,
   userToken?: string
 ): Promise<T> {
-  const origin = trustedChatOrigin(registry[domain])
+  const origin = rawTrustedChatOrigin(registry[domain])
   const target = new URL(origin)
   if (
     !path.startsWith("/" + domain + "/") ||
@@ -126,7 +124,7 @@ export async function chatPlatformRequest<T>(
   if (!token) {
     if (domain === "resource")
       throw createServiceError(403, "delegated_user_token_required")
-    token = await chatBackendToken(domain)
+    token = await rawChatBackendToken(domain)
   }
   const result = await fetcher<T>({
     url: target,
@@ -150,22 +148,22 @@ export async function chatPlatformRequest<T>(
     )
   return result.data
 }
-export async function verifyChatBackend(request: Request, storage = false) {
+export async function rawVerifyChatBackend(request: Request, storage = false) {
   if (
     ["cookie", "origin", "sec-fetch-site"].some((name) =>
       request.headers.has(name)
     )
   )
     throw createServiceError(403, "machine_request_required")
-  const auth = trustedChatOrigin(environment.authUrl)
+  const auth = rawTrustedChatOrigin(environment.authUrl)
   const scope = storage ? "storage:chat:credential" : "chat:dispatch"
   const maxAge = storage ? 120 : 600
   const audience = storage
     ? new URL(
         "/internal/storage/credential",
-        trustedChatOrigin(environment.appUrl)
+        rawTrustedChatOrigin(environment.appUrl)
       ).href
-    : trustedChatOrigin(environment.oauthAudience)
+    : rawTrustedChatOrigin(environment.oauthAudience)
   const input = requestToResourceInput(request)
   if (
     !input.authorizationHeader ||

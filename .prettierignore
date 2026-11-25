@@ -6,3 +6,27 @@ node_modules/
 coverage/
 pnpm-lock.yaml
 .pnpm-store/
+
+# Build output, secrets, generated files and upstream UI components
+.git/
+.agents/
+.codex/
+.nitro/
+.output/
+.vite/
+.vercel/
+.tanstack/
+out/
+build/
+pkg/
+**/components/ui/
+**/.env*
+**/*.gen.*
+**/*.tsbuildinfo
+**/next-env.d.ts
+**/bun.lock
+**/bun.lockb
+**/deno.lock
+**/pnpm-lock.yaml
+**/package-lock.json
+**/yarn.lock

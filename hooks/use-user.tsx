@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/hooks/use-auth"
-import { useCurrentUserQuery } from "@/services/client/chat"
+import { useAuth } from "@/hooks/use-auth";
+import { useCurrentUserQuery } from "@/queries/chat";
 
 export function useUser() {
-  const auth = useAuth()
-  const query = useCurrentUserQuery(auth.authenticated, auth.account?.id)
+  const auth = useAuth();
+  const query = useCurrentUserQuery(auth.authenticated, auth.account?.id);
 
   async function refresh() {
-    const account = await auth.refresh()
+    const account = await auth.refresh();
 
     if (!account) {
-      return null
+      return null;
     }
 
-    const result = await query.refetch()
-    return result.data ?? null
+    const result = await query.refetch();
+    return result.data ?? null;
   }
 
   const user =
@@ -28,8 +28,8 @@ export function useUser() {
           avatar: auth.account.image ?? "",
           username: auth.account.username,
         }
-      : null
-  const loading = auth.loading || (auth.authenticated && query.isPending)
+      : null;
+  const loading = auth.loading || (auth.authenticated && query.isPending);
 
   return {
     user,
@@ -41,9 +41,9 @@ export function useUser() {
     error: auth.error ?? query.error,
     refresh,
     session: undefined,
-  }
+  };
 }
 
 export function useAccount() {
-  return null
+  return null;
 }

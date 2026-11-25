@@ -1,4 +1,5 @@
-import { backgroundCallback } from "@/services/background"
-export const runtime = "nodejs"
-export const maxDuration = 300
-export const POST = backgroundCallback
+import { actDeliver } from "@/controllers/background";
+
+export const runtime = "nodejs";
+export const maxDuration = 300;
+export const POST = actDeliver;

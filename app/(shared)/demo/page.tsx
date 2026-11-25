@@ -1,68 +1,76 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Label } from "@gorth-io/primitive/default/label"
-import { Input } from "@gorth-io/primitive/default/input"
-import { Textarea } from "@gorth-io/primitive/default/textarea"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { toast } from "@gorth-io/primitive/custom/toast"
-import { useAuth } from "@/hooks/use-auth"
+import { useState } from "react";
+import { Label } from "@gorth-com/primitive/default/label";
+import { Input } from "@gorth-com/primitive/default/input";
+import { Textarea } from "@gorth-com/primitive/default/textarea";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { toast } from "@gorth-com/primitive/custom/toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   normalizeRequestRecord,
   parseJsonInput,
   stringifyJson,
-} from "@/utils/client/formatter"
-import type { DemoApiRequest } from "@/utils/interface"
-import { useDemoJsonMutation } from "@/services/client/demo"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
+} from "@/utils/client/formatter";
+import type { DemoApiRequest } from "@/utils/interface";
+import { useDemoJsonMutation } from "@/queries/demo";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
 
-const initialParams = { from: "demo-page" }
-const initialBody = { title: "Demo body" }
+const initialParams = { from: "demo-page" };
+const initialBody = { title: "Demo body" };
 const initialHeaders = {
   "x-demo-client": "demo-page",
   "x-demo-feature": "endpoint",
-}
-const initialTimeout = 10000
+};
+const initialTimeout = 10000;
 
 export default function Page() {
-  const { account, loading, authenticated, login, register, logout } = useAuth()
+  const {
+    account,
+    loading,
+    signingIn,
+    authenticated,
+    login,
+    register,
+    logout,
+  } = useAuth();
   const [paramsText, setParamsText] = useState(() =>
-    stringifyJson(initialParams)
-  )
-  const [bodyText, setBodyText] = useState(() => stringifyJson(initialBody))
+    stringifyJson(initialParams),
+  );
+  const [bodyText, setBodyText] = useState(() => stringifyJson(initialBody));
   const [headersText, setHeadersText] = useState(() =>
-    stringifyJson(initialHeaders)
-  )
-  const [timeoutText, setTimeoutText] = useState(String(initialTimeout))
+    stringifyJson(initialHeaders),
+  );
+  const [timeoutText, setTimeoutText] = useState(String(initialTimeout));
   const [requestArg, setRequestArg] = useState<DemoApiRequest>(() => ({
     params: initialParams,
     body: initialBody,
     headers: initialHeaders,
     timeout: initialTimeout,
-  }))
+  }));
   const [runDemo, { data: resultDemo, error: demoError, isLoading }] =
-    useDemoJsonMutation()
-  const demoLoading = isLoading
+    useDemoJsonMutation();
+  const demoLoading = isLoading;
 
   async function fetchDemo() {
     const params = parseJsonInput(paramsText, {
       label: "Params",
       objectOnly: true,
-    })
-    const body = parseJsonInput(bodyText, { label: "Body" })
+    });
+    const body = parseJsonInput(bodyText, { label: "Body" });
     const headers = parseJsonInput(headersText, {
       label: "Headers",
       objectOnly: true,
-    })
-    const timeout = Number(timeoutText)
+    });
+    const timeout = Number(timeoutText);
 
-    if (params === null || body === null || headers === null) return
+    if (params === null || body === null || headers === null) return;
     if (!Number.isFinite(timeout) || timeout <= 0) {
       toast.add({
         type: "error",
         description: "Timeout must be a number greater than 0",
-      })
-      return
+      });
+      return;
     }
 
     const nextArg: DemoApiRequest = {
@@ -70,33 +78,33 @@ export default function Page() {
       body,
       headers: normalizeRequestRecord(headers, "headers"),
       timeout,
-    }
-    setRequestArg(nextArg)
+    };
+    setRequestArg(nextArg);
     try {
-      await runDemo(nextArg).unwrap()
+      await runDemo(nextArg).unwrap();
       toast.add({
         type: "success",
         description: "Demo request sent successfully",
-      })
+      });
     } catch (error) {
       toast.add({
         type: "error",
         description: error instanceof Error ? error.message : "Request failed",
-      })
+      });
     }
   }
 
   function resetDemo() {
-    setParamsText(stringifyJson(initialParams))
-    setBodyText(stringifyJson(initialBody))
-    setHeadersText(stringifyJson(initialHeaders))
-    setTimeoutText(String(initialTimeout))
+    setParamsText(stringifyJson(initialParams));
+    setBodyText(stringifyJson(initialBody));
+    setHeadersText(stringifyJson(initialHeaders));
+    setTimeoutText(String(initialTimeout));
     setRequestArg({
       params: initialParams,
       body: initialBody,
       headers: initialHeaders,
       timeout: initialTimeout,
-    })
+    });
   }
 
   return (
@@ -109,10 +117,19 @@ export default function Page() {
         </Button>
       ) : (
         <div className="flex gap-2">
-          <Button type="button" onClick={() => login("/demo")}>
+          <Button
+            type="button"
+            disabled={signingIn}
+            aria-busy={signingIn}
+            onClick={() => login("/demo")}
+          >
             Sign in
           </Button>
-          <Button type="button" onClick={() => register("/demo")}>
+          <Button
+            type="button"
+            disabled={signingIn}
+            onClick={() => register("/demo")}
+          >
             Register
           </Button>
         </div>
@@ -221,7 +238,7 @@ export default function Page() {
                 authenticated,
               },
               null,
-              2
+              2,
             )}
           </pre>
         ) : (
@@ -229,5 +246,5 @@ export default function Page() {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,49 +1,59 @@
-"use client"
-
-import { type PropsWithChildren, useCallback, useMemo, useState } from "react"
-import { AuthContext } from "@/hooks/use-auth"
-import type { AuthContextValue } from "@/utils/interface"
+"use client";
+import { type PropsWithChildren, useCallback, useMemo, useState } from "react";
+import { useProgress } from "@/hooks/use-progress";
+import { AuthContext } from "@/hooks/use-auth";
+import type { AuthContextValue } from "@/utils/interface";
 import {
   login as requestLogin,
   register as requestRegister,
   useAuthAccount,
   useAuthLogoutMutation,
-} from "@/services/client/auth"
+} from "@/queries/auth";
+
+const signInError = "Sign in is unavailable. Please try again.";
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const { account, loading: accountLoading, error, refresh } = useAuthAccount()
-  const [logoutMutation, logoutState] = useAuthLogoutMutation()
-  const [actionError, setActionError] = useState<Error | null>(null)
+  const { account, loading: accountLoading, error, refresh } = useAuthAccount();
+  const [logoutMutation, logoutState] = useAuthLogoutMutation();
+  const [actionError, setActionError] = useState<Error | null>(null);
+  const { pending: signingIn, run } = useProgress();
 
-  const login = useCallback(async (returnTo = "/chat") => {
-    setActionError(null)
-    try {
-      await requestLogin(returnTo)
-    } catch {
-      setActionError(new Error("Sign in is unavailable. Please try again."))
-    }
-  }, [])
-
-  const register = useCallback(async (returnTo = "/chat") => {
-    setActionError(null)
-    try {
-      await requestRegister(returnTo)
-    } catch {
-      setActionError(new Error("Sign up is unavailable. Please try again."))
-    }
-  }, [])
-
+  const beginSignIn = useCallback(
+    async (returnTo: string, registration = false) => {
+      setActionError(null);
+      await run(
+        () =>
+          registration ? requestRegister(returnTo) : requestLogin(returnTo),
+        {
+          keepUntilNavigation: true,
+          errorMessage: signInError,
+          errorTitle: "Unable to sign in",
+          errorId: "chat-sign-in-error",
+          onError: () => setActionError(new Error(signInError)),
+        },
+      );
+    },
+    [run],
+  );
+  const login = useCallback(
+    (returnTo = "/chat") => beginSignIn(returnTo),
+    [beginSignIn],
+  );
+  const register = useCallback(
+    (returnTo = "/chat") => beginSignIn(returnTo, true),
+    [beginSignIn],
+  );
   const logout = useCallback(
     async (returnTo = "/") => {
-      await logoutMutation(returnTo).unwrap()
+      await logoutMutation(returnTo).unwrap();
     },
-    [logoutMutation]
-  )
-
+    [logoutMutation],
+  );
   const value = useMemo<AuthContextValue>(
     () => ({
       account,
       loading: accountLoading || logoutState.isLoading,
+      signingIn,
       error: actionError ?? error ?? null,
       authenticated: Boolean(account),
       refresh,
@@ -54,6 +64,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [
       account,
       accountLoading,
+      signingIn,
       actionError,
       error,
       login,
@@ -61,12 +72,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       logoutState.isLoading,
       refresh,
       register,
-    ]
-  )
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+    ],
+  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
 export function Auth({ children }: PropsWithChildren) {
-  return <AuthProvider>{children}</AuthProvider>
+  return <AuthProvider>{children}</AuthProvider>;
 }

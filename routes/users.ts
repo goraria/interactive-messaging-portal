@@ -1,22 +1,18 @@
-import { Hono } from "hono"
-import type { ApiEnv } from "@/utils/interface"
+import { Hono } from "hono";
 import {
-  createUser,
-  deleteUser,
-  getCurrentUser,
-  getUser,
-  listUsers,
-  updateUser,
-} from "@/controllers/users"
-import { requireAuth } from "@/middlewares/auth"
+  actCreateUser,
+  actDeleteUser,
+  actGetCurrentUser,
+  actGetUser,
+  actListUsers,
+  actUpdateUser,
+} from "@/controllers/users";
+import { requireAuth } from "@/middlewares/auth";
 
-export function usersRoutes() {
-  const router = new Hono<ApiEnv>()
-  router.get("/user", requireAuth(), listUsers)
-  router.post("/user", requireAuth(), createUser)
-  router.get("/user/me", requireAuth(), getCurrentUser)
-  router.get("/user/:userId", requireAuth(), getUser)
-  router.patch("/user/:userId", requireAuth(), updateUser)
-  router.delete("/user/:userId", requireAuth(), deleteUser)
-  return router
-}
+export const usersRoutes = new Hono();
+usersRoutes.get("/", requireAuth(), actListUsers);
+usersRoutes.post("/", requireAuth(), actCreateUser);
+usersRoutes.get("/me", requireAuth(), actGetCurrentUser);
+usersRoutes.get("/:id", requireAuth(), actGetUser);
+usersRoutes.patch("/:id", requireAuth(), actUpdateUser);
+usersRoutes.delete("/:id", requireAuth(), actDeleteUser);

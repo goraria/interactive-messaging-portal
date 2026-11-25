@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fetcher, toWebResponse, type FetcherOptions } from "@/utils/fetcher"
-export async function forwardRouteRequest(options: {
+export async function rawForwardRouteRequest(options: {
   url: URL
   method: string
   headers: Headers

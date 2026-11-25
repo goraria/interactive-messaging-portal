@@ -1,40 +1,40 @@
-import z from "@gorth-io/structure/cores/zod"
+import z from "@gorth-com/structure/cores/zod";
 
-export const conversationTypeOptions = ["direct", "group", "channel"] as const
+export const conversationTypeOptions = ["direct", "group", "channel"] as const;
 
 export const conversationMemberRoleOptions = [
   "owner",
   "admin",
   "member",
-] as const
+] as const;
 
-export const messageTypeOptions = ["text", "system", "image", "file"] as const
+export const messageTypeOptions = ["text", "system", "image", "file"] as const;
 
 export const messageDeliveryStatusOptions = [
   "sent",
   "delivered",
   "read",
-] as const
+] as const;
 
 export const userStatusOptions = [
   "active",
   "inactive",
   "suspended",
   "deleted",
-] as const
+] as const;
 
-export const conversationTypeSchema = z.enum(conversationTypeOptions)
+export const conversationTypeSchema = z.enum(conversationTypeOptions);
 export const conversationMemberRoleSchema = z.enum(
-  conversationMemberRoleOptions
-)
-export const messageTypeSchema = z.enum(messageTypeOptions)
-export const messageDeliveryStatusSchema = z.enum(messageDeliveryStatusOptions)
-export const userStatusSchema = z.enum(userStatusOptions)
+  conversationMemberRoleOptions,
+);
+export const messageTypeSchema = z.enum(messageTypeOptions);
+export const messageDeliveryStatusSchema = z.enum(messageDeliveryStatusOptions);
+export const userStatusSchema = z.enum(userStatusOptions);
 
-export const uuidSchema = z.string().uuid()
-export const dateTimeSchema = z.string().datetime()
-export const metadataSchema = z.record(z.string(), z.unknown()).default({})
-export const nullableDateTimeSchema = dateTimeSchema.nullable()
+export const uuidSchema = z.string().uuid();
+export const dateTimeSchema = z.string().datetime();
+export const metadataSchema = z.record(z.string(), z.unknown()).default({});
+export const nullableDateTimeSchema = dateTimeSchema.nullable();
 
 export const userSchema = z.object({
   id: uuidSchema,
@@ -48,7 +48,7 @@ export const userSchema = z.object({
   metadata: metadataSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
-})
+});
 
 export const conversationSchema = z.object({
   id: uuidSchema,
@@ -60,7 +60,7 @@ export const conversationSchema = z.object({
   archivedAt: nullableDateTimeSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
-})
+});
 
 export const conversationMemberSchema = z.object({
   conversationId: uuidSchema,
@@ -72,13 +72,13 @@ export const conversationMemberSchema = z.object({
   leftAt: nullableDateTimeSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
-})
+});
 
 export const messageUserSchema = z.object({
   id: z.string(),
   name: z.string(),
   email: z.string().email().nullable(),
-})
+});
 
 export const messageSchema = z.object({
   id: uuidSchema,
@@ -92,7 +92,7 @@ export const messageSchema = z.object({
   deletedAt: nullableDateTimeSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
-})
+});
 
 export const conversationDetailsSchema = conversationSchema.extend({
   members: z.array(userSchema),
@@ -100,7 +100,7 @@ export const conversationDetailsSchema = conversationSchema.extend({
   unreadCount: z.number().int().default(0),
   role: conversationMemberRoleSchema.optional(),
   mutedUntil: nullableDateTimeSchema.optional(),
-})
+});
 
 export const messageAttachmentSchema = z.object({
   id: uuidSchema,
@@ -111,7 +111,7 @@ export const messageAttachmentSchema = z.object({
   sizeBytes: z.string().nullable(),
   metadata: metadataSchema,
   createdAt: dateTimeSchema,
-})
+});
 
 export const messageReactionSchema = z.object({
   id: uuidSchema,
@@ -119,7 +119,7 @@ export const messageReactionSchema = z.object({
   userId: uuidSchema,
   emoji: z.string(),
   createdAt: dateTimeSchema,
-})
+});
 
 export const messageReceiptSchema = z.object({
   id: uuidSchema,
@@ -130,7 +130,7 @@ export const messageReceiptSchema = z.object({
   readAt: nullableDateTimeSchema,
   createdAt: dateTimeSchema,
   updatedAt: dateTimeSchema,
-})
+});
 
 export const createUserSchema = z.object({
   externalUserId: z.string().optional(),
@@ -138,11 +138,11 @@ export const createUserSchema = z.object({
   email: z.string().email(),
   image: z.string().optional(),
   metadata: metadataSchema.optional(),
-})
+});
 
 export const updateUserSchema = createUserSchema.partial().extend({
   lastSeenAt: z.coerce.date().nullable().optional(),
-})
+});
 
 export const createConversationSchema = z.object({
   slug: z.string().optional(),
@@ -151,44 +151,44 @@ export const createConversationSchema = z.object({
   type: conversationTypeSchema.default("direct"),
   createdById: uuidSchema.optional(),
   metadata: metadataSchema.optional(),
-})
+});
 
 export const updateConversationSchema = createConversationSchema
   .partial()
   .extend({
     archivedAt: z.coerce.date().nullable().optional(),
-  })
+  });
 
 export const createConversationMemberSchema = z.object({
   userId: uuidSchema,
   role: conversationMemberRoleSchema.default("member"),
-})
+});
 
 export const updateConversationMemberSchema = z.object({
   role: conversationMemberRoleSchema.optional(),
   lastReadMessageId: uuidSchema.nullable().optional(),
   mutedUntil: z.coerce.date().nullable().optional(),
   leftAt: z.coerce.date().nullable().optional(),
-})
+});
 
 export const createMessageSchema = z.object({
   senderId: uuidSchema,
   content: z.string().min(1).max(4000),
   type: messageTypeSchema.default("text"),
   metadata: metadataSchema.optional(),
-})
+});
 
 export const createRoomMessageSchema = z.object({
   content: z.string().min(1).max(4000),
   metadata: metadataSchema.optional(),
-})
+});
 
 export const updateMessageSchema = z.object({
   content: z.string().min(1).max(4000).optional(),
   type: messageTypeSchema.optional(),
   metadata: metadataSchema.optional(),
   deletedAt: z.coerce.date().nullable().optional(),
-})
+});
 
 export const createMessageAttachmentSchema = z.object({
   fileName: z.string().min(1),
@@ -196,30 +196,30 @@ export const createMessageAttachmentSchema = z.object({
   mimeType: z.string().optional(),
   sizeBytes: z.string().optional(),
   metadata: metadataSchema.optional(),
-})
+});
 
 export const updateMessageAttachmentSchema =
-  createMessageAttachmentSchema.partial()
+  createMessageAttachmentSchema.partial();
 
 export const createMessageReactionSchema = z.object({
   userId: uuidSchema,
   emoji: z.string().min(1),
-})
+});
 
 export const createMessageReceiptSchema = z.object({
   userId: uuidSchema,
   status: messageDeliveryStatusSchema.default("delivered"),
-})
+});
 
 export const updateMessageReceiptSchema = z.object({
   status: messageDeliveryStatusSchema.optional(),
   deliveredAt: z.coerce.date().nullable().optional(),
   readAt: z.coerce.date().nullable().optional(),
-})
+});
 
 export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
-})
+});
 
 export const chatSchemas = {
   user: userSchema,
@@ -230,47 +230,47 @@ export const chatSchemas = {
   messageAttachment: messageAttachmentSchema,
   messageReaction: messageReactionSchema,
   messageReceipt: messageReceiptSchema,
-}
+};
 
-export type ConversationType = z.infer<typeof conversationTypeSchema>
+export type ConversationType = z.infer<typeof conversationTypeSchema>;
 export type ConversationMemberRole = z.infer<
   typeof conversationMemberRoleSchema
->
-export type MessageType = z.infer<typeof messageTypeSchema>
-export type MessageDeliveryStatus = z.infer<typeof messageDeliveryStatusSchema>
-export type User = z.infer<typeof userSchema>
-export type Conversation = z.infer<typeof conversationSchema>
-export type ConversationDetails = z.infer<typeof conversationDetailsSchema>
-export type ConversationMember = z.infer<typeof conversationMemberSchema>
-export type Message = z.infer<typeof messageSchema>
-export type MessageAttachment = z.infer<typeof messageAttachmentSchema>
-export type MessageReaction = z.infer<typeof messageReactionSchema>
-export type MessageReceipt = z.infer<typeof messageReceiptSchema>
-export type CreateUserInput = z.infer<typeof createUserSchema>
-export type UpdateUserInput = z.infer<typeof updateUserSchema>
-export type CreateConversationInput = z.infer<typeof createConversationSchema>
-export type UpdateConversationInput = z.infer<typeof updateConversationSchema>
+>;
+export type MessageType = z.infer<typeof messageTypeSchema>;
+export type MessageDeliveryStatus = z.infer<typeof messageDeliveryStatusSchema>;
+export type User = z.infer<typeof userSchema>;
+export type Conversation = z.infer<typeof conversationSchema>;
+export type ConversationDetails = z.infer<typeof conversationDetailsSchema>;
+export type ConversationMember = z.infer<typeof conversationMemberSchema>;
+export type Message = z.infer<typeof messageSchema>;
+export type MessageAttachment = z.infer<typeof messageAttachmentSchema>;
+export type MessageReaction = z.infer<typeof messageReactionSchema>;
+export type MessageReceipt = z.infer<typeof messageReceiptSchema>;
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type CreateConversationInput = z.infer<typeof createConversationSchema>;
+export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type CreateConversationMemberInput = z.infer<
   typeof createConversationMemberSchema
->
+>;
 export type UpdateConversationMemberInput = z.infer<
   typeof updateConversationMemberSchema
->
-export type CreateMessageInput = z.infer<typeof createMessageSchema>
-export type CreateRoomMessageInput = z.infer<typeof createRoomMessageSchema>
-export type UpdateMessageInput = z.infer<typeof updateMessageSchema>
+>;
+export type CreateMessageInput = z.infer<typeof createMessageSchema>;
+export type CreateRoomMessageInput = z.infer<typeof createRoomMessageSchema>;
+export type UpdateMessageInput = z.infer<typeof updateMessageSchema>;
 export type CreateMessageAttachmentInput = z.infer<
   typeof createMessageAttachmentSchema
->
+>;
 export type UpdateMessageAttachmentInput = z.infer<
   typeof updateMessageAttachmentSchema
->
+>;
 export type CreateMessageReactionInput = z.infer<
   typeof createMessageReactionSchema
->
+>;
 export type CreateMessageReceiptInput = z.infer<
   typeof createMessageReceiptSchema
->
+>;
 export type UpdateMessageReceiptInput = z.infer<
   typeof updateMessageReceiptSchema
->
+>;

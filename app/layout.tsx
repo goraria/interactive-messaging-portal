@@ -1,18 +1,19 @@
-import { Geist_Mono, Inter } from "next/font/google"
-import type { Metadata } from "next"
+import { ProgressProvider } from "@/hooks/use-progress";
+import { Geist_Mono, Inter } from "next/font/google";
+import type { Metadata } from "next";
 
-import "@/styles/globals.css"
-import { ApplicationLayout } from "@gorth-io/primitive/layouts/application"
+import "@/styles/globals.css";
+import { ApplicationLayout } from "@gorth-com/primitive/layouts/application";
 
-import { appGlobal } from "@/utils/constant"
-import { AuthProvider } from "@/providers/auth"
+import { appGlobal } from "@/utils/constant";
+import { AuthProvider } from "@/providers/auth";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-})
+});
 
 export const metadata: Metadata = {
   title: {
@@ -23,17 +24,19 @@ export const metadata: Metadata = {
   icons: {
     icon: { url: "/icon.svg", type: "image/svg+xml" },
   },
-}
+};
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <ApplicationLayout
       className={`font-sans antialiased ${fontMono.variable} ${inter.variable}`}
     >
-      <AuthProvider>{children}</AuthProvider>
+      <ProgressProvider pendingLabel="Opening Gorth SSO…">
+        <AuthProvider>{children}</AuthProvider>
+      </ProgressProvider>
     </ApplicationLayout>
-  )
+  );
 }

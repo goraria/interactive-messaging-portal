@@ -1,8 +1,8 @@
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
 
 export interface LoadingScreenProps {
-  className?: string
+  className?: string;
 }
 
 export function LoadingScreen({ className }: LoadingScreenProps) {
@@ -12,7 +12,7 @@ export function LoadingScreen({ className }: LoadingScreenProps) {
       aria-live="polite"
       className={cn(
         "fixed inset-0 z-[9999] flex h-[100vh] min-h-[100vh] w-screen items-center justify-center overflow-hidden bg-transparent",
-        className
+        className,
       )}
       role="status"
       style={{ height: "100vh", minHeight: "100vh" }}
@@ -20,5 +20,5 @@ export function LoadingScreen({ className }: LoadingScreenProps) {
       <Spinner aria-hidden="true" size={32} variant="infinite" />
       <span className="sr-only">Loading...</span>
     </div>
-  )
+  );
 }

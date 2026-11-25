@@ -1,8 +1,6 @@
 {
   "id": "646b453e-c98e-4d87-8f94-bf12162f1084",
-  "prevIds": [
-    "98884d12-2f28-4e8d-81dd-11118713a923"
-  ],
+  "prevIds": ["98884d12-2f28-4e8d-81dd-11118713a923"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -13,9 +11,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "account_pkey",
       "schema": "public",
@@ -242,14 +238,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "userId"
-      ],
+      "columns": ["userId"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "account_userId_user_id_fk",
@@ -264,9 +256,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "session_pkey",
       "schema": "public",
@@ -421,14 +411,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "userId"
-      ],
+      "columns": ["userId"],
       "schemaTo": "public",
       "tableTo": "user",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "session_userId_user_id_fk",
@@ -443,9 +429,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "user_pkey",
       "schema": "public",
@@ -571,9 +555,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -777,9 +759,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",
@@ -793,9 +773,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verification_pkey",
       "schema": "public",
@@ -902,12 +880,7 @@
       "entityType": "indexes"
     },
     {
-      "values": [
-        "google",
-        "github",
-        "facebook",
-        "credentials"
-      ],
+      "values": ["google", "github", "facebook", "credentials"],
       "name": "provider_enum",
       "schema": "public",
       "entityType": "enums"

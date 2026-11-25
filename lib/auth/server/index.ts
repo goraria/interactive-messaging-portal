@@ -1,31 +1,32 @@
-import { oauthCookiePrefix } from "@/utils/environment"
-import "server-only"
-import { APIError, betterAuth } from "better-auth"
-import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { decodeJwt } from "@gorth-io/structure/cores/jose"
-import { and, eq } from "drizzle-orm"
-import { getDatabase } from "@/database"
+import { oauthCookiePrefix } from "@/utils/environment";
+import "server-only";
+import { APIError, betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { decodeJwt } from "@gorth-com/structure/cores/jose";
+import { and, eq } from "drizzle-orm";
+import { getDatabase } from "@/database";
 import {
   accountTable,
   sessionTable,
   userTable,
   verificationTable,
   rateLimitTable,
-} from "@/database/auth"
-import { getAuthConfig } from "@/lib/auth/config"
-import { gorthProvider, validateGorthUser } from "@/lib/auth/provider"
-import { nodeEnv, sessionMaxAgeSeconds } from "@/utils/environment"
+} from "@/database/auth";
+import { getAuthConfig } from "@/lib/auth/config";
+import { gorthProvider, validateGorthUser } from "@/lib/auth/provider";
+import { nodeEnv, sessionMaxAgeSeconds } from "@/utils/environment";
+import { isLocalUserActive } from "@/utils/server/auth";
 
 function createAuth() {
-  const config = getAuthConfig()
-  const database = getDatabase()
-  const expiresIn = Number(sessionMaxAgeSeconds ?? 2592000)
+  const config = getAuthConfig();
+  const database = getDatabase();
+  const expiresIn = Number(sessionMaxAgeSeconds ?? 2592000);
   if (
     !Number.isSafeInteger(expiresIn) ||
     expiresIn < 120 ||
     expiresIn > 2592000
   )
-    throw new Error("Invalid session lifetime")
+    throw new Error("Invalid session lifetime");
   return betterAuth({
     appName: "Gorth Chat",
     baseURL: config.origin,
@@ -56,7 +57,12 @@ function createAuth() {
       },
     }),
     plugins: [
-      gorthProvider(config.ssoOrigin, config.clientId, config.resources),
+      gorthProvider(
+        config.ssoOrigin,
+        config.clientId,
+        config.resources,
+        config,
+      ),
     ],
     user: {
       additionalFields: {
@@ -82,6 +88,10 @@ function createAuth() {
     },
     rateLimit: { enabled: nodeEnv === "production", storage: "database" },
     advanced: {
+      useSecureCookies: false,
+      defaultCookieAttributes: {
+        secure: nodeEnv === "production" || new URL(config.origin).protocol === "https:",
+      },
       database: { generateId: false },
       cookiePrefix: oauthCookiePrefix,
     },
@@ -116,40 +126,41 @@ function createAuth() {
               .select()
               .from(userTable)
               .where(eq(userTable.id, session.userId))
-              .limit(1)
-            if (
-              !localUser ||
-              localUser.status !== "active" ||
-              localUser.deletedAt ||
-              (localUser.bannedAt &&
-                (!localUser.banExpires || localUser.banExpires > new Date()))
-            )
+              .limit(1);
+            if (!localUser || !isLocalUserActive(localUser))
               throw new APIError("FORBIDDEN", {
                 message: "Account is unavailable",
-              })
+              });
             const [account] = await database
               .select({ sid: accountTable.ssoSessionId })
               .from(accountTable)
               .where(
                 and(
                   eq(accountTable.userId, session.userId),
-                  eq(accountTable.providerId, "gorth")
-                )
+                  eq(accountTable.providerId, "gorth"),
+                ),
               )
-              .limit(1)
+              .limit(1);
             if (!account?.sid)
               throw new APIError("UNAUTHORIZED", {
                 message: "SSO session identity is missing",
-              })
-            return { data: { ...session, ssoSessionId: account?.sid ?? null } }
+              });
+            return { data: { ...session, ssoSessionId: account?.sid ?? null } };
           },
         },
       },
     },
-  })
+  });
 }
 
-let instance: ReturnType<typeof createAuth> | undefined
-export function getAuth() {
-  return (instance ??= createAuth())
-}
+let instance: ReturnType<typeof createAuth> | undefined;
+export type AuthServer = ReturnType<typeof createAuth>;
+
+export const authServer = {
+  get api() {
+    return (instance ??= createAuth()).api;
+  },
+  handler(request: Request) {
+    return (instance ??= createAuth()).handler(request);
+  },
+};

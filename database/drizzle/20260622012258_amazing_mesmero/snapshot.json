@@ -1,8 +1,6 @@
 {
   "id": "96c82432-32dd-464b-baba-47857773f82c",
-  "prevIds": [
-    "584effc9-3c7d-49cc-9c5b-c12b3aa7027b"
-  ],
+  "prevIds": ["584effc9-3c7d-49cc-9c5b-c12b3aa7027b"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -13,9 +11,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -219,9 +215,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",

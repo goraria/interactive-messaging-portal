@@ -1,16 +1,16 @@
-"use client"
-import { useEffect, useState } from "react"
-import { Button } from "@gorth-io/primitive/custom/button"
+"use client";
+import { useEffect, useState } from "react";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-} from "@gorth-io/primitive/default/card"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
-import * as api from "@/services/client/chat-billing"
-import { StripePayment } from "@/components/conversation/stripe-payment"
-import { formatChatAmount } from "@/utils/chat-amount"
+} from "@gorth-com/primitive/default/card";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
+import * as api from "@/queries/chat-billing";
+import { StripePayment } from "@/components/conversation/stripe-payment";
+import { formatChatAmount } from "@/utils/chat-amount";
 export default function ChatBilling() {
   const [data, setData] = useState<Awaited<
       ReturnType<typeof api.chatBillingSnapshot>
@@ -18,52 +18,54 @@ export default function ChatBilling() {
     [error, setError] = useState<string | null>(null),
     [busy, setBusy] = useState(false),
     [provider, setProvider] = useState("momo"),
-    [offset, setOffset] = useState(0)
+    [offset, setOffset] = useState(0);
   const [cardPayment, setCardPayment] = useState<{
-    invoiceId: string
-    paymentId: string
-    clientSecret: string
-    publishableKey: string
-  } | null>(null)
+    invoiceId: string;
+    paymentId: string;
+    clientSecret: string;
+    publishableKey: string;
+  } | null>(null);
   async function refresh() {
     try {
-      setData(await api.chatBillingSnapshot(offset))
-      setError(null)
+      setData(await api.chatBillingSnapshot(offset));
+      setError(null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Billing unavailable")
+      setError(cause instanceof Error ? cause.message : "Billing unavailable");
     }
   }
   useEffect(() => {
-    let stopped = false
+    let stopped = false;
     void api
       .chatBillingSnapshot(offset)
       .then((result) => {
         if (!stopped) {
-          setData(result)
-          setError(null)
+          setData(result);
+          setError(null);
         }
       })
       .catch(() => {
         if (!stopped)
           setError(
-            "Billing services unavailable. Retry after configuring service access."
-          )
-      })
+            "Billing services unavailable. Retry after configuring service access.",
+          );
+      });
     return () => {
-      stopped = true
-    }
-  }, [offset])
+      stopped = true;
+    };
+  }, [offset]);
   async function act(operation: () => Promise<unknown>) {
-    if (busy) return
-    setBusy(true)
-    setError(null)
+    if (busy) return;
+    setBusy(true);
+    setError(null);
     try {
-      await operation()
-      await refresh()
+      await operation();
+      await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Billing action failed")
+      setError(
+        cause instanceof Error ? cause.message : "Billing action failed",
+      );
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
   return (
@@ -98,7 +100,7 @@ export default function ChatBilling() {
                 ))}
               </CardContent>
             </Card>
-          ))
+          )),
         )}
         {data && !data.catalog.length ? (
           <p>No paid plans are currently offered.</p>
@@ -131,9 +133,9 @@ export default function ChatBilling() {
                     void act(() =>
                       api.chatCancelSubscription(
                         item.id,
-                        item.cancelAtPeriodEnd
-                      )
-                    )
+                        item.cancelAtPeriodEnd,
+                      ),
+                    );
                 }}
               >
                 {item.cancelAtPeriodEnd ? "Resume" : "Cancel"}
@@ -172,8 +174,8 @@ export default function ChatBilling() {
                     void act(async () => {
                       const result = await api.chatPayInvoice(
                         invoice.id,
-                        provider
-                      )
+                        provider,
+                      );
                       if (
                         result.checkout?.clientSecret &&
                         result.checkout.publishableKey &&
@@ -184,16 +186,16 @@ export default function ChatBilling() {
                           paymentId: result.payment.id,
                           clientSecret: result.checkout.clientSecret,
                           publishableKey: result.checkout.publishableKey,
-                        })
+                        });
                       } else if (result.checkout?.url) {
-                        const url = new URL(result.checkout.url)
+                        const url = new URL(result.checkout.url);
                         if (url.protocol !== "https:")
-                          throw new Error("Invalid checkout URL")
-                        window.location.assign(url.href)
+                          throw new Error("Invalid checkout URL");
+                        window.location.assign(url.href);
                       } else
                         throw new Error(
-                          "This provider requires a configured hosted checkout. Choose another provider."
-                        )
+                          "This provider requires a configured hosted checkout. Choose another provider.",
+                        );
                     })
                   }
                 >
@@ -209,7 +211,7 @@ export default function ChatBilling() {
                     disabled={busy}
                     onClick={() =>
                       void act(() =>
-                        api.chatReconcileInvoice(invoice.id, payment.id)
+                        api.chatReconcileInvoice(invoice.id, payment.id),
                       )
                     }
                   >
@@ -227,10 +229,10 @@ export default function ChatBilling() {
           onComplete={async () => {
             await api.chatReconcileInvoice(
               cardPayment.invoiceId,
-              cardPayment.paymentId
-            )
-            setCardPayment(null)
-            await refresh()
+              cardPayment.paymentId,
+            );
+            setCardPayment(null);
+            await refresh();
           }}
         />
       ) : null}
@@ -261,7 +263,7 @@ export default function ChatBilling() {
             Math.max(
               data.invoices.length,
               data.subscriptions.length,
-              data.payments.length
+              data.payments.length,
             ) < 20
           }
           onClick={() => setOffset(offset + 20)}
@@ -270,5 +272,5 @@ export default function ChatBilling() {
         </Button>
       </div>
     </main>
-  )
+  );
 }

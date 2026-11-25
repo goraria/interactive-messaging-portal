@@ -1,10 +1,11 @@
 {
-  "name": "@gorth-io/interactive-messaging-portal",
-  "version": "0.0.0-alpha.0",
+  "name": "@gorth-com/interactive-messaging-portal",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.4",
   "scripts": {
+    "prettier": "prettier . --write",
     "dev": "next dev --port 3030",
     "build": "next build",
     "start": "next start",
@@ -22,26 +23,26 @@
     "db:migrate-auth": "bun scripts/migrate-better-auth.mjs"
   },
   "dependencies": {
-    "@gorth-io/primitive": "0.0.0-alpha.10",
-    "@gorth-io/principle": "0.0.0-alpha.10",
-    "@gorth-io/structure": "0.0.0-alpha.10",
+    "@gorth-com/primitive": "0.0.0-alpha.12",
+    "@gorth-com/principle": "0.0.0-alpha.12",
+    "@gorth-com/structure": "0.0.0-alpha.12",
     "@hono/bun": "^1.0.1",
-    "@hono/node-server": "^2.1.7",
+    "@hono/node-server": "^2.1.11",
     "@hono/vercel": "^1.0.1",
     "@types/ws": "^8.18.2",
-    "@vercel/functions": "^3.11.1",
+    "@vercel/functions": "^3.11.3",
     "@vercel/otel": "^2.3.0",
     "@vercel/queue": "0.11.0",
-    "better-auth": "^1.7.21",
+    "better-auth": "^1.7.27",
     "drizzle-orm": "1.0.0-rc.4",
-    "hono": "^4.13.18",
+    "hono": "^4.13.21",
     "next": "16.4.6",
     "next-themes": "^0.4.6",
     "postgres": "^4.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1",
-    "ws": "^8.22.2"
+    "ws": "^8.23.0"
   },
   "devDependencies": {
     "@next/env": "16.4.6",
@@ -52,17 +53,17 @@
     "drizzle-kit": "1.0.0-rc.4",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.6",
-    "postcss": "^8.5.32",
-    "prettier": "^3.10.0",
+    "postcss": "^8.5.33",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.3.5",
     "typescript": "^5.9.3",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "bun": {
     "onlyBuiltDependencies": [
-      "@gorth-io/primitive",
-      "@gorth-io/principle",
-      "@gorth-io/structure",
+      "@gorth-com/primitive",
+      "@gorth-com/principle",
+      "@gorth-com/structure",
       "esbuild",
       "sharp",
       "unrs-resolver"

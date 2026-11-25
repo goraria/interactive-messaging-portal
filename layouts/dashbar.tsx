@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { Header } from "@gorth-io/primitive/layouts/header"
-import Link from "next/link"
-import { AppBrand } from "@/components/app-brand"
-import { Button } from "@gorth-io/primitive/custom/button"
+import { Header } from "@gorth-com/primitive/layouts/header";
+import Link from "next/link";
+import { AppBrand } from "@/components/app-brand";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@gorth-io/primitive/default/tooltip"
-import { PanelLeft } from "@gorth-io/primitive/cores/lucide"
-import { useSidebar } from "@gorth-io/primitive/custom/sidebar"
-import { ModeSwitcher } from "@gorth-io/primitive/element/mode-toggle"
-import { Customizer } from "@gorth-io/primitive/element/customizer"
-import { NavUser } from "@gorth-io/primitive/modules/dashboard"
-import { NotificationMenu } from "@/components/notification/notification-menu"
-import { useAuth } from "@/hooks/use-auth"
-import { useUser } from "@/hooks/use-user"
-import { visitor } from "@/utils/constant"
+} from "@gorth-com/primitive/default/tooltip";
+import { PanelLeft } from "@gorth-com/primitive/cores/lucide";
+import { useSidebar } from "@gorth-com/primitive/custom/sidebar";
+import { ModeSwitcher } from "@gorth-com/primitive/element/mode-toggle";
+import { Customizer } from "@gorth-com/primitive/element/customizer";
+import { NavUser } from "@gorth-com/primitive/modules/dashboard";
+import { NotificationMenu } from "@/components/notification/notification-menu";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
+import { visitor } from "@/utils/constant";
 
 interface DashbarProps {
-  onSidebarToggle?: () => void
+  onSidebarToggle?: () => void;
 }
 
 export function Dashbar({ onSidebarToggle }: DashbarProps) {
-  const auth = useAuth()
-  const { loading, authenticated, login, register, logout } = auth
-  const { user } = useUser()
-  const { toggleSidebar } = useSidebar()
-  const handleSidebarToggle = onSidebarToggle ?? toggleSidebar
+  const auth = useAuth();
+  const { loading, authenticated, login, register, logout } = auth;
+  const { user } = useUser();
+  const { toggleSidebar } = useSidebar();
+  const handleSidebarToggle = onSidebarToggle ?? toggleSidebar;
 
   return (
     <Header
@@ -54,7 +54,9 @@ export function Dashbar({ onSidebarToggle }: DashbarProps) {
       }
       left={
         <>
-          <Link href="/" aria-label="Gorth Chat home"><AppBrand /></Link>
+          <Link href="/" aria-label="Gorth Chat home">
+            <AppBrand />
+          </Link>
           <Tooltip>
             <TooltipTrigger
               render={
@@ -76,5 +78,5 @@ export function Dashbar({ onSidebarToggle }: DashbarProps) {
         </>
       }
     />
-  )
+  );
 }

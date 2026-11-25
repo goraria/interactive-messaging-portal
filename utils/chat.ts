@@ -1,4 +1,4 @@
-import { v4 } from "@gorth-io/structure/cores/uuid"
+import { v4 } from "@gorth-com/structure/cores/uuid";
 import type {
   ConversationMemberRow,
   ConversationRow,
@@ -7,7 +7,7 @@ import type {
   MessageReceiptRow,
   MessageRow,
   UserRow,
-} from "@/database/schema"
+} from "@/database/schema";
 
 export function slugifyConversation(value: string) {
   const slug = value
@@ -15,9 +15,9 @@ export function slugifyConversation(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9-_]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 120)
+    .slice(0, 120);
 
-  return slug || `conversation-${v4()}`
+  return slug || `conversation-${v4()}`;
 }
 
 export function toUser(row: UserRow) {
@@ -35,7 +35,7 @@ export function toUser(row: UserRow) {
     metadata: row.metadata,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
+  };
 }
 
 export function toConversation(row: ConversationRow) {
@@ -49,7 +49,7 @@ export function toConversation(row: ConversationRow) {
     archivedAt: row.archivedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
+  };
 }
 
 export function toConversationMember(row: ConversationMemberRow) {
@@ -63,13 +63,13 @@ export function toConversationMember(row: ConversationMemberRow) {
     leftAt: row.leftAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
+  };
 }
 
 export function toMessage(
   row: MessageRow,
   sender: UserRow | null | undefined,
-  conversation?: ConversationRow | null
+  conversation?: ConversationRow | null,
 ) {
   return {
     id: row.id,
@@ -87,7 +87,7 @@ export function toMessage(
     deletedAt: row.deletedAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
+  };
 }
 
 export function toMessageAttachment(row: MessageAttachmentRow) {
@@ -100,7 +100,7 @@ export function toMessageAttachment(row: MessageAttachmentRow) {
     sizeBytes: row.sizeBytes,
     metadata: row.metadata,
     createdAt: row.createdAt.toISOString(),
-  }
+  };
 }
 
 export function toMessageReaction(row: MessageReactionRow) {
@@ -110,7 +110,7 @@ export function toMessageReaction(row: MessageReactionRow) {
     userId: row.userId,
     emoji: row.emoji,
     createdAt: row.createdAt.toISOString(),
-  }
+  };
 }
 
 export function toMessageReceipt(row: MessageReceiptRow) {
@@ -123,5 +123,5 @@ export function toMessageReceipt(row: MessageReceiptRow) {
     readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-  }
+  };
 }

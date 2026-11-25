@@ -15,7 +15,11 @@ it("uses NEXT_OAUTH_COOKIE_PREFIX for native cookie issuance and reading", async
     baseURL: origin, basePath: "/auth",
     secret: randomBytes(48).toString("base64url"),
     logger: { disabled: true }, rateLimit: { enabled: false },
-    advanced: { cookiePrefix: oauthCookiePrefix },
+    advanced: {
+      cookiePrefix: oauthCookiePrefix,
+      useSecureCookies: false,
+      defaultCookieAttributes: { secure: true },
+    },
     emailAndPassword: { enabled: true },
     session: { cookieCache: { enabled: true, maxAge: 120 } },
   });
@@ -26,7 +30,12 @@ it("uses NEXT_OAUTH_COOKIE_PREFIX for native cookie issuance and reading", async
   }));
   expect(response.status).toBe(200);
   const setCookies = response.headers.getSetCookie();
-  expect(setCookies.some(cookie => cookie.startsWith("__Secure-fixture-prefix.session_token=") || cookie.startsWith("fixture-prefix.session_token="))).toBe(true);
+  expect(setCookies.length).toBeGreaterThan(0);
+  for (const cookie of setCookies) {
+    expect(cookie).not.toMatch(/^__Secure-/);
+    expect(cookie).toMatch(/;\s*Secure(?:;|$)/i);
+  }
+  expect(setCookies.some(cookie => cookie.startsWith("fixture-prefix.session_token="))).toBe(true);
   expect(setCookies.some(cookie => cookie.includes("fixture-prefix.session_data="))).toBe(true);
   const incoming = new Headers({ Cookie: setCookies.map(cookie => cookie.split(";")[0]).join("; ") });
   expect(getSessionCookie(incoming, { cookiePrefix: oauthCookiePrefix })).toBeTruthy();

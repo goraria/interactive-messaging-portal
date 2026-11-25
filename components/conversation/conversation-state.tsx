@@ -1,15 +1,15 @@
-import type { LucideIcon } from "@gorth-io/primitive/cores/lucide"
-import type { ReactNode } from "react"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
-import { cn } from "@gorth-io/primitive/cores/cn"
+import type { LucideIcon } from "@gorth-com/primitive/cores/lucide";
+import type { ReactNode } from "react";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
+import { cn } from "@gorth-com/primitive/cores/cn";
 
 interface ConversationStateProps {
-  title?: string
-  description?: string
-  icon?: LucideIcon
-  loading?: boolean
-  className?: string
-  children?: ReactNode
+  title?: string;
+  description?: string;
+  icon?: LucideIcon;
+  loading?: boolean;
+  className?: string;
+  children?: ReactNode;
 }
 
 export function ConversationState({
@@ -24,7 +24,7 @@ export function ConversationState({
     <div
       className={cn(
         "flex min-h-40 w-full flex-col items-center justify-center gap-3 p-6 text-center",
-        className
+        className,
       )}
     >
       {loading ? (
@@ -46,5 +46,5 @@ export function ConversationState({
       ) : null}
       {children}
     </div>
-  )
+  );
 }

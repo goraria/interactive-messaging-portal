@@ -1,5 +1,5 @@
-import { LoadingScreen } from "@/features/shared/loading"
+import { LoadingScreen } from "@/features/shared/loading";
 
 export default function Loading() {
-  return <LoadingScreen />
+  return <LoadingScreen />;
 }

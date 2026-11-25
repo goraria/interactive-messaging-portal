@@ -10,8 +10,10 @@ Production uses `pnpm build` (default Turbopack) and `pnpm start`.
 
 ## Layout
 
-- `app`: pages and small Node-runtime Hono Route Handler bridges.
-- `app/api.ts`: the owning Hono factory, configured once before mounting routes.
+- `app/(auth)`: auth pages, separate from API entry points.
+- `app/(api)/[...route]/route.ts`: the HTTP entry, exporting `handle(routes)`.
+- `routes/index.ts`: Hono domain composition; `middlewares/http.ts` owns
+  HTTP policy and post-commit realtime/background scheduling.
 - Root `routes`, `controllers`, `middlewares`, `services`, `schemas`, `database`:
   server domain code. Domain controllers use native Hono Context.
 - `services/client`, `schemas/client`: browser API clients and response contracts.
@@ -20,8 +22,10 @@ Production uses `pnpm build` (default Turbopack) and `pnpm start`.
 - `utils/environment.ts`: the only application environment reader.
 - `pkg`: unchanged archive; not imported, linted, typechecked or built.
 
-Chat clients call `/chat/user`, `/chat/conversation`, `/chat/message`, etc.
-Explicit bridges reserve these API paths ahead of the `/chat/[id]` UI page.
+Chat clients call `/user`, `/conversation`, `/message`, etc.
+The UI retains `/chat/[id]`; API paths no longer need per-domain Next bridges.
+WebSocket upgrades and Queue/Cron callbacks retain their platform-specific
+Route Handlers and duration/trigger configuration.
 There is no `/api` URL prefix, old `/proxy/chat` endpoint, listener on 5050,
 client-to-server rewrite, signed BFF RPC or self-fetch to `/auth/me`.
 Platform forwarding keeps the existing `/resource`, `/notification`, `/discovery`

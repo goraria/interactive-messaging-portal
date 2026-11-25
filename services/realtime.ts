@@ -1,10 +1,10 @@
 import "server-only"
 import { sql } from "drizzle-orm"
-import { chatRows } from "@/services/helper"
+import { rawChatRows } from "@/models/index"
 import { createServiceError } from "@/utils/service"
 import { conversationSocketPath } from "@/utils/realtime"
 
-export async function createConversationToken(conversationId: string) {
+export async function rawCreateConversationToken(conversationId: string) {
   // Preserve the existing HTTP endpoint; no OAuth token is returned to JavaScript.
   // The WebSocket handshake independently authenticates the HttpOnly app session.
   return {
@@ -13,20 +13,20 @@ export async function createConversationToken(conversationId: string) {
   }
 }
 
-export async function publishConversationEvent(eventId: string, lease: string) {
+export async function rawPublishConversationEvent(eventId: string, lease: string) {
   // Retain durable delivery accounting/retry. Sockets can already observe the
   // committed chat_event without waiting for this background acknowledgement.
-  const [published] = await chatRows(
+  const [published] = await rawChatRows(
     sql`UPDATE chat_delivery SET delivered_at=clock_timestamp(),lease_token=NULL,lease_until=NULL,last_error=NULL WHERE event_id=${eventId}::uuid AND destination='realtime' AND lease_token=${lease}::uuid RETURNING event_id`
   )
   if (!published) throw createServiceError(409, "realtime_delivery_lease_lost")
 }
 
-export async function readConversationSignal(
+export async function rawReadConversationSignal(
   conversationId: string,
   userId: string
 ) {
-  const [row] = await chatRows<{ sequence: string }>(sql`
+  const [row] = await rawChatRows<{ sequence: string }>(sql`
     SELECT COALESCE((SELECT e.sequence FROM chat_event e WHERE e.conversation_id=m.conversation_id AND e.created_at>=m.joined_at ORDER BY e.sequence DESC LIMIT 1),0)::text AS sequence
     FROM conversation_member m JOIN "user" u ON u.id=m.user_id
     WHERE m.conversation_id=${conversationId}::uuid AND m.user_id=${userId}::uuid

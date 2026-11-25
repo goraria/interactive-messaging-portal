@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import NotFoundPage from "@gorth-io/primitive/pages/not-found"
+import NotFoundPage from "@gorth-com/primitive/pages/not-found";
 
 export default function NotFound() {
-  return <NotFoundPage />
+  return <NotFoundPage />;
 }

@@ -1,17 +1,17 @@
-import "server-only"
-import axios from "@gorth-io/structure/cores/axios"
-import { createFetcher } from "@gorth-io/structure/modules/http"
+import "server-only";
+import axios from "@gorth-com/structure/cores/axios";
+import { createFetcher } from "@gorth-com/structure/modules/http";
 import {
   AuthError,
   createAuthPolicy,
   createUserInfoCache,
   type IdentityCacheInput,
-} from "@gorth-io/structure/modules/auth/server"
-import { authUrl } from "@/utils/environment"
-import { ssoUserInfoSchema } from "@/schemas/sso"
-import type { SsoAccessTokenClaims } from "@/services/sso"
+} from "@gorth-com/structure/modules/auth/server";
+import { authUrl } from "@/utils/environment";
+import { ssoUserInfoSchema } from "@/schemas/sso";
+import type { SsoAccessTokenClaims } from "@/services/sso";
 
-const fetcher = createFetcher(axios)
+const fetcher = createFetcher(axios);
 
 // Structure owns bounded caching, coalescing and logout fences. This adapter
 // owns the SSO endpoint and profile validation, never an authorization decision.
@@ -22,8 +22,8 @@ const profiles = createUserInfoCache<SsoAccessTokenClaims>({
   parse: (value) => ssoUserInfoSchema.parse(value),
   allowed: (profile) => !profile.status || profile.status === "active",
   async load(accessToken) {
-    if (!authUrl) throw new AuthError("invalid_configuration")
-    let response
+    if (!authUrl) throw new AuthError("invalid_configuration");
+    let response;
     try {
       response = await fetcher<unknown>({
         url: new URL("/auth/oauth2/userinfo", authUrl),
@@ -37,27 +37,27 @@ const profiles = createUserInfoCache<SsoAccessTokenClaims>({
         cache: "no-store",
         maxContentLength: 1024 * 1024,
         validateStatus: () => true,
-      })
+      });
     } catch {
-      throw new AuthError("unavailable")
+      throw new AuthError("unavailable");
     }
     if (response.status !== 200)
       throw new AuthError(
         response.status === 401 || response.status === 403
           ? "rejected"
-          : "unavailable"
-      )
-    return response.data
+          : "unavailable",
+      );
+    return response.data;
   },
-})
+});
 
-export async function getSsoUserInfo(
+export async function rawGetSsoUserInfo(
   accessToken: string,
-  options: IdentityCacheInput = {}
+  options: IdentityCacheInput = {},
 ): Promise<SsoAccessTokenClaims> {
-  return await profiles.get(accessToken, options)
+  return await profiles.get(accessToken, options);
 }
 
-export async function forgetSsoUserInfo(accessToken: string) {
-  await profiles.forget(accessToken)
+export async function rawForgetSsoUserInfo(accessToken: string) {
+  await profiles.forget(accessToken);
 }

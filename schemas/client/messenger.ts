@@ -1,5 +1,5 @@
-import { z } from "@gorth-io/structure/cores/zod"
-import { messageSchema } from "@/schemas/client/chat"
+import { z } from "@gorth-com/structure/cores/zod";
+import { messageSchema } from "@/schemas/client/chat";
 export const messengerMessageSchema = messageSchema.extend({
   version: z.number().int().default(1),
   syncVersion: z
@@ -15,18 +15,22 @@ export const messengerMessageSchema = messageSchema.extend({
         fileUrl: z.string(),
         mimeType: z.string().nullable(),
         sizeBytes: z.string().nullable(),
-      })
+      }),
     )
     .default([]),
   reactions: z
     .array(
-      z.object({ id: z.string().uuid(), userId: z.string(), emoji: z.string() })
+      z.object({
+        id: z.string().uuid(),
+        userId: z.string(),
+        emoji: z.string(),
+      }),
     )
     .default([]),
   receipts: z
     .array(z.object({ userId: z.string(), status: z.string() }))
     .default([]),
-})
+});
 export const messengerPageSchema = z.object({
   data: z.array(messengerMessageSchema),
   eventCursor: z.string(),
@@ -34,16 +38,16 @@ export const messengerPageSchema = z.object({
     hasMore: z.boolean(),
     nextCursor: z.string().nullable(),
   }),
-})
+});
 export const messengerEventsSchema = z.array(
   z.object({
     id: z.string(),
     sequence: z.string(),
     type: z.string(),
     entityId: z.string(),
-  })
-)
-export type MessengerMessage = z.infer<typeof messengerMessageSchema>
+  }),
+);
+export type MessengerMessage = z.infer<typeof messengerMessageSchema>;
 export const callSchema = z.object({
   id: z.string(),
   conversationId: z.string(),
@@ -54,5 +58,5 @@ export const callSchema = z.object({
   expiresAt: z.string(),
   createdAt: z.string(),
   endedAt: z.string().nullable(),
-})
-export type MessengerCall = z.infer<typeof callSchema>
+});
+export type MessengerCall = z.infer<typeof callSchema>;

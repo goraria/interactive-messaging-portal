@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises"
 import nextEnv from "@next/env"
-import postgres from "@gorth-io/structure/cores/postgres"
+import postgres from "@gorth-com/structure/cores/postgres"
 
 nextEnv.loadEnvConfig(process.cwd())
 const { databaseUrl } = await import("../utils/environment.ts")

@@ -1,8 +1,6 @@
 {
   "id": "584effc9-3c7d-49cc-9c5b-c12b3aa7027b",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -13,9 +11,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -85,9 +81,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",

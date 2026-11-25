@@ -1,42 +1,45 @@
-"use client"
+"use client";
 
-import { useMemo } from "react"
-import Link from "next/link"
-import { useParams } from "next/navigation"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { MessageCircleOff, TriangleAlert } from "@gorth-io/primitive/cores/lucide"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { useLayout } from "@gorth-io/primitive/providers/layout"
-import { Broadcast } from "@/components/conversation/broadcast"
-import { ConversationState } from "@/components/conversation/conversation-state"
-import { MessHeader } from "@/components/conversation/mess-header"
-import { useAuth } from "@/hooks/use-auth"
-import { useUser } from "@/hooks/use-user"
-import { visitor } from "@/utils/constant"
-import { getConversationPeer } from "@/utils/conversation"
-import { readRouteId } from "@/utils/client/formatter"
-import { useConversationQuery } from "@/services/client/chat"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+import { useMemo } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Button } from "@gorth-com/primitive/custom/button";
+import {
+  MessageCircleOff,
+  TriangleAlert,
+} from "@gorth-com/primitive/cores/lucide";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { useLayout } from "@gorth-com/primitive/providers/layout";
+import { Broadcast } from "@/components/conversation/broadcast";
+import { ConversationState } from "@/components/conversation/conversation-state";
+import { MessHeader } from "@/components/conversation/mess-header";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
+import { visitor } from "@/utils/constant";
+import { getConversationPeer } from "@/utils/conversation";
+import { readRouteId } from "@/utils/client/formatter";
+import { useConversationQuery } from "@/queries/chat";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 export default function ChatConversationPage() {
-  const { variant, width } = useLayout()
-  const params = useParams<{ id?: string | string[] }>()
-  const id = readRouteId(params.id)
-  const auth = useAuth()
-  const { user, loading: userLoading } = useUser()
+  const { variant, width } = useLayout();
+  const params = useParams<{ id?: string | string[] }>();
+  const id = readRouteId(params.id);
+  const auth = useAuth();
+  const { user, loading: userLoading } = useUser();
   const conversationQuery = useConversationQuery(
     id,
-    auth.authenticated && Boolean(user)
-  )
-  const conversation = conversationQuery.data ?? null
-  const networkError = useNetworkErrorToast(conversationQuery.error)
+    auth.authenticated && Boolean(user),
+  );
+  const conversation = conversationQuery.data ?? null;
+  const networkError = useNetworkErrorToast(conversationQuery.error);
   const peer = useMemo(
     () => (conversation ? getConversationPeer(conversation, user) : null),
-    [conversation, user]
-  )
+    [conversation, user],
+  );
 
   if (auth.loading || userLoading || (user && conversationQuery.isPending)) {
-    return <ConversationState loading className="h-full" />
+    return <ConversationState loading className="h-full" />;
   }
 
   if (conversationQuery.error) {
@@ -47,7 +50,7 @@ export default function ChatConversationPage() {
         description={networkError ? undefined : conversationQuery.error.message}
         className="h-full"
       />
-    )
+    );
   }
 
   if (!conversation) {
@@ -63,29 +66,30 @@ export default function ChatConversationPage() {
           Back to inbox
         </Button>
       </main>
-    )
+    );
   }
 
   const conversationName =
     conversation.type === "direct"
       ? (peer?.name ?? conversation.title ?? "Direct message")
-      : (conversation.title ?? conversation.slug ?? "Conversation")
+      : (conversation.title ?? conversation.slug ?? "Conversation");
   const subtitle =
     conversation.type === "direct"
       ? (peer?.email ?? "Direct message")
-      : `${conversation.members.length} members`
-  const avatar = conversation.type === "direct" ? peer?.image : null
+      : `${conversation.members.length} members`;
+  const avatar = conversation.type === "direct" ? peer?.image : null;
   const userAvatars = Object.fromEntries(
-    conversation.members.map((member) => [member.externalUserId, member.image])
-  )
+    conversation.members.map((member) => [member.externalUserId, member.image]),
+  );
 
   return (
     <div
       className={cn(
         "flex min-h-0 flex-1 flex-col",
         variant === "floating" && "w-full gap-2 pb-2",
-        variant === "floating" && (width === "narrow" ? "container mx-auto px-6" : "px-2"),
-        variant === "inset" && "overflow-hidden"
+        variant === "floating" &&
+          (width === "narrow" ? "container mx-auto px-6" : "px-2"),
+        variant === "inset" && "overflow-hidden",
       )}
     >
       <MessHeader
@@ -107,5 +111,5 @@ export default function ChatConversationPage() {
         canSend={Boolean(user) && !conversation.archivedAt}
       />
     </div>
-  )
+  );
 }

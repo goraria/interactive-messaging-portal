@@ -7,7 +7,7 @@
 
 ## Scope and status
 
-This phase adapts Browser Website, Launcher Website, Chat, Gorth Browser and Gorth Launcher to the published `@gorth-io/structure` auth contract. Video, Reader, Social, Task and Marketplace are not migrated in this phase. The seven shared services are inspected for compatibility, not changed.
+This phase adapts Browser Website, Launcher Website, Chat, Gorth Browser and Gorth Launcher to the published `@gorth-com/structure` auth contract. Video, Reader, Social, Task and Marketplace are not migrated in this phase. The seven shared services are inspected for compatibility, not changed.
 
 Gorth SSO remains the only identity authority. This work does not install a second Better Auth server in an application, modify the published package, push database schemas, or register production OAuth clients.
 
@@ -15,11 +15,11 @@ The automated checks use signed-token fixtures and mocked infrastructure. They d
 
 ## Boundaries
 
-| Application | Session authority and storage | Browser-facing layer |
-| --- | --- | --- |
-| Browser / Launcher Website | Server-only Next.js runtime, application PostgreSQL | Next.js route handlers; public session only |
-| Chat | Hono server, application PostgreSQL | Next.js BFF calls the signed internal Hono endpoint; no DB connection or DB URL in Next.js |
-| Browser / Launcher desktop | Electron main process, encrypted vault | Renderer receives a public snapshot, never OAuth credentials |
+| Application                | Session authority and storage                       | Browser-facing layer                                                                       |
+| -------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Browser / Launcher Website | Server-only Next.js runtime, application PostgreSQL | Next.js route handlers; public session only                                                |
+| Chat                       | Hono server, application PostgreSQL                 | Next.js BFF calls the signed internal Hono endpoint; no DB connection or DB URL in Next.js |
+| Browser / Launcher desktop | Electron main process, encrypted vault              | Renderer receives a public snapshot, never OAuth credentials                               |
 
 Shared modules own OAuth/PKCE, session coordination contracts, logout verification, resource policy and the public auth client. Each app supplies configuration and a storage adapter. Application environment loading and database connections remain outside the package.
 
@@ -140,7 +140,7 @@ These live checks use no signed-in account. They verify login-start transport an
 - Validate desktop login, unlock, periodic verification and logout with Electron's real cookie jar and vault, including restart without a retained central cookie.
 
 Do not roll the remaining five web apps onto the new mechanism until these real-system pilot checks have passed.
+
 > Historical pilot notes. Current Chat auth and cloud rollout are documented in
 > [auth-structure.md](auth-structure.md). Do not restore the retired BFF or
 > custom app-session engine from these notes.
-

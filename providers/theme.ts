@@ -1,1 +1,1 @@
-export * from "@gorth-io/primitive/providers/theme"
+export * from "@gorth-com/primitive/providers/theme";

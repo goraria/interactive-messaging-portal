@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@gorth-io/primitive/custom/button"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Command,
   CommandEmpty,
@@ -10,83 +10,83 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@gorth-io/primitive/default/command"
+} from "@gorth-com/primitive/default/command";
 import {
   MessagesSquare,
   Send,
   RefreshCw,
   TriangleAlert,
-} from "@gorth-io/primitive/cores/lucide"
-import { NavIdentity } from "@gorth-io/primitive/dashboard/nav-user"
-import { Spinner } from "@gorth-io/primitive/pattern/spinner"
-import { ConversationState } from "@/components/conversation/conversation-state"
-import { useAuth } from "@/hooks/use-auth"
-import { useUser } from "@/hooks/use-user"
-import { visitor } from "@/utils/constant"
+} from "@gorth-com/primitive/cores/lucide";
+import { NavIdentity } from "@gorth-com/primitive/dashboard/nav-user";
+import { Spinner } from "@gorth-com/primitive/pattern/spinner";
+import { ConversationState } from "@/components/conversation/conversation-state";
+import { useAuth } from "@/hooks/use-auth";
+import { useUser } from "@/hooks/use-user";
+import { visitor } from "@/utils/constant";
 import {
   useConversationsQuery,
   useCreateConversationMutation,
   useUsersQuery,
-} from "@/services/client/chat"
-import type { User } from "@/schemas/client/chat"
-import { NewGroup } from "@/components/conversation/new-group"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@/queries/chat";
+import type { User } from "@/schemas/client/chat";
+import { NewGroup } from "@/components/conversation/new-group";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 export default function ChatPage() {
-  const router = useRouter()
-  const auth = useAuth()
+  const router = useRouter();
+  const auth = useAuth();
   const {
     user,
     loading: userLoading,
     error: userError,
     refresh: refreshUser,
-  } = useUser()
-  const displayName = user?.name ?? auth.account?.name ?? visitor.name
-  const [selectingUser, setSelectingUser] = useState(false)
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const usersQuery = useUsersQuery(Boolean(user))
-  const conversationsQuery = useConversationsQuery(Boolean(user))
-  const networkError = useNetworkErrorToast(error)
-  const usersNetworkError = useNetworkErrorToast(usersQuery.error)
-  useNetworkErrorToast(userError)
+  } = useUser();
+  const displayName = user?.name ?? auth.account?.name ?? visitor.name;
+  const [selectingUser, setSelectingUser] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const usersQuery = useUsersQuery(Boolean(user));
+  const conversationsQuery = useConversationsQuery(Boolean(user));
+  const networkError = useNetworkErrorToast(error);
+  const usersNetworkError = useNetworkErrorToast(usersQuery.error);
+  useNetworkErrorToast(userError);
   const [createConversation, createConversationState] =
-    useCreateConversationMutation()
+    useCreateConversationMutation();
   const users = (usersQuery.data ?? []).filter(
-    (candidate) => candidate.id !== user?.id
-  )
+    (candidate) => candidate.id !== user?.id,
+  );
 
   async function openConversation(selectedUser: User) {
-    if (!user || selectedUserId || createConversationState.isLoading) return
+    if (!user || selectedUserId || createConversationState.isLoading) return;
 
-    setSelectedUserId(selectedUser.id)
-    setError(null)
+    setSelectedUserId(selectedUser.id);
+    setError(null);
 
     try {
       const existingConversation = (conversationsQuery.data ?? []).find(
         (conversation) =>
           conversation.type === "direct" &&
           conversation.members.some((member) => member.id === user.id) &&
-          conversation.members.some((member) => member.id === selectedUser.id)
-      )
+          conversation.members.some((member) => member.id === selectedUser.id),
+      );
 
       if (existingConversation) {
-        router.push(`/chat/${existingConversation.id}`)
-        return
+        router.push(`/chat/${existingConversation.id}`);
+        return;
       }
 
       const conversation = await createConversation({
         type: "direct",
         title: selectedUser.name,
         participantIds: [selectedUser.id],
-      }).unwrap()
+      }).unwrap();
 
-      router.push(`/chat/${conversation.id}`)
+      router.push(`/chat/${conversation.id}`);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Unable to start conversation"
-      )
-      setSelectedUserId(null)
+        cause instanceof Error ? cause.message : "Unable to start conversation",
+      );
+      setSelectedUserId(null);
     }
   }
 
@@ -95,7 +95,7 @@ export default function ChatPage() {
       <main className="flex h-full items-center justify-center">
         <ConversationState loading />
       </main>
-    )
+    );
   }
 
   if (userError) {
@@ -115,7 +115,7 @@ export default function ChatPage() {
           </Button>
         </ConversationState>
       </main>
-    )
+    );
   }
 
   if (!selectingUser) {
@@ -138,7 +138,7 @@ export default function ChatPage() {
           <NewGroup />
         </div>
       </main>
-    )
+    );
   }
 
   return (
@@ -210,5 +210,5 @@ export default function ChatPage() {
         </Button>
       </div>
     </main>
-  )
+  );
 }

@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useEffect, type ReactNode } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-import { LoadingScreen } from "@/features/shared/loading"
-import { useAuth } from "@/hooks/use-auth"
-import { isPublicRoute } from "@/utils/client/formatter"
+import { LoadingScreen } from "@/features/shared/loading";
+import { useAuth } from "@/hooks/use-auth";
+import { isPublicRoute } from "@/utils/client/formatter";
 
 export interface AuthGuardProps {
-  children: ReactNode
-  publicPrefixes?: readonly string[]
-  redirectTo?: string
+  children: ReactNode;
+  publicPrefixes?: readonly string[];
+  redirectTo?: string;
 }
 
 export function AuthGuard({
@@ -18,20 +18,20 @@ export function AuthGuard({
   publicPrefixes = [],
   redirectTo = "/",
 }: AuthGuardProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const auth = useAuth()
-  const isPublic = isPublicRoute(pathname, publicPrefixes)
+  const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+  const isPublic = isPublicRoute(pathname, publicPrefixes);
 
   useEffect(() => {
     if (!isPublic && !auth.loading && !auth.authenticated) {
-      router.replace(redirectTo)
+      router.replace(redirectTo);
     }
-  }, [auth.authenticated, auth.loading, isPublic, redirectTo, router])
+  }, [auth.authenticated, auth.loading, isPublic, redirectTo, router]);
 
   if (!isPublic && (auth.loading || !auth.authenticated)) {
-    return <LoadingScreen />
+    return <LoadingScreen />;
   }
 
-  return children
+  return children;
 }

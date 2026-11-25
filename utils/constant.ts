@@ -14,7 +14,7 @@ import {
   File,
   Info,
   SmilePlus,
-} from "@gorth-io/primitive/cores/lucide"
+} from "@gorth-com/primitive/cores/lucide";
 
 export const appGlobal = {
   name: "GorCer",
@@ -52,30 +52,30 @@ export const appGlobal = {
     "Bản quyền © Waddles Corp. 2020 - " +
     new Date().getFullYear() +
     " Cung cấp bởi Gorth Inc.",
-}
+};
 
 export const visitor = {
   name: "Visitor",
   email: "visitor@gorth.org",
   avatar: "",
-}
+};
 
 export interface ChatConversation {
-  archived?: boolean
-  id: string
-  roomName: string
-  url: string
-  name: string
-  avatar?: string | null
-  email: string
-  subject: string
-  date: string
-  teaser: string
-  createdAt: string
-  unread?: boolean
+  archived?: boolean;
+  id: string;
+  roomName: string;
+  url: string;
+  name: string;
+  avatar?: string | null;
+  email: string;
+  subject: string;
+  date: string;
+  teaser: string;
+  createdAt: string;
+  unread?: boolean;
 }
 
-export const chatConversations: ChatConversation[] = []
+export const chatConversations: ChatConversation[] = [];
 
 export const messageSidebar = {
   user: visitor,
@@ -115,7 +115,7 @@ export const messageSidebar = {
     },
   ],
   navMessage: chatConversations,
-}
+};
 
 export const infoSidebar = {
   actions: [
@@ -196,7 +196,7 @@ export const infoSidebar = {
       ],
     },
   ],
-}
+};
 
 export const settingSidebar = {
   user: visitor,
@@ -220,7 +220,7 @@ export const settingSidebar = {
     { title: "Sign In", url: "/sign-in", icon: LogIn },
     { title: "Sign Up", url: "/sign-up", icon: KeySquare },
   ],
-}
+};
 
 export const sharedNavbar = {
   user: visitor,
@@ -282,4 +282,4 @@ export const sharedNavbar = {
       icon: KeySquare,
     },
   ],
-}
+};

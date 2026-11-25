@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import ComingSoonPage from "@gorth-io/primitive/pages/coming-soon"
+import ComingSoonPage from "@gorth-com/primitive/pages/coming-soon";
 
 export default function Forbidden() {
-  return <ComingSoonPage />
+  return <ComingSoonPage />;
 }

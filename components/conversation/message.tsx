@@ -1,49 +1,49 @@
-"use client"
-import { useState } from "react"
-import { Button } from "@gorth-io/primitive/custom/button"
-import { Input } from "@gorth-io/primitive/default/input"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { Dot, RotateCcw } from "@gorth-io/primitive/cores/lucide"
+"use client";
+import { useState } from "react";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { Dot, RotateCcw } from "@gorth-com/primitive/cores/lucide";
 import {
   changeMessengerMessage,
   reactMessengerMessage,
   reportMessengerMessage,
-} from "@/services/client/messenger"
-import { useUser } from "@/hooks/use-user"
-import type { ChatMessage } from "@/hooks/use-conversation"
+} from "@/queries/messenger";
+import { useUser } from "@/hooks/use-user";
+import type { ChatMessage } from "@/hooks/use-conversation";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@gorth-io/primitive/custom/avatar"
+} from "@gorth-com/primitive/custom/avatar";
 import {
   Bubble,
   BubbleContent,
   BubbleGroup,
   BubbleReactions,
-} from "@gorth-io/primitive/default/bubble"
+} from "@gorth-com/primitive/default/bubble";
 import {
   Message as MessageRoot,
   MessageAvatar,
   MessageContent,
   MessageFooter,
   MessageHeader,
-} from "@gorth-io/primitive/default/message"
-import { formatMessageTime, getInitials } from "@/utils/client/formatter"
-import { useNetworkErrorToast } from "@/hooks/use-network-error-toast"
+} from "@gorth-com/primitive/default/message";
+import { formatMessageTime, getInitials } from "@/utils/client/formatter";
+import { useNetworkErrorToast } from "@/hooks/use-network-error-toast";
 
 interface MessageProps {
-  message: ChatMessage
-  isOwnMessage: boolean
-  showHeader: boolean
-  showAvatar: boolean
-  showFooter?: boolean
-  showDeliveryStatus?: boolean
-  failed?: boolean
-  onRetry?: () => void
-  avatar?: string | null
-  pending?: boolean
-  onChange?: (message: ChatMessage) => void
+  message: ChatMessage;
+  isOwnMessage: boolean;
+  showHeader: boolean;
+  showAvatar: boolean;
+  showFooter?: boolean;
+  showDeliveryStatus?: boolean;
+  failed?: boolean;
+  onRetry?: () => void;
+  avatar?: string | null;
+  pending?: boolean;
+  onChange?: (message: ChatMessage) => void;
 }
 
 export function Message({
@@ -59,40 +59,41 @@ export function Message({
   pending = false,
   onChange,
 }: MessageProps) {
-  const { user } = useUser()
-  const [editing, setEditing] = useState(false)
-  const [editingVersion, setEditingVersion] = useState(message.version)
-  const [draft, setDraft] = useState(message.content)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const networkError = useNetworkErrorToast(error)
-  const [removing, setRemoving] = useState(false)
+  const { user } = useUser();
+  const [editing, setEditing] = useState(false);
+  const [editingVersion, setEditingVersion] = useState(message.version);
+  const [draft, setDraft] = useState(message.content);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const networkError = useNetworkErrorToast(error);
+  const [removing, setRemoving] = useState(false);
   const deliveryStatus = failed
     ? "Error"
     : pending
       ? "Sending"
       : message.receipts.some(
-        (receipt) => receipt.status === "read" && receipt.userId !== message.user.id
-      )
+            (receipt) =>
+              receipt.status === "read" && receipt.userId !== message.user.id,
+          )
         ? "Read"
         : message.receipts.some((receipt) => receipt.userId !== message.user.id)
           ? "Delivered"
-          : "Sent"
+          : "Sent";
   const act = async (operation: () => Promise<ChatMessage>) => {
-    if (busy) return
-    setBusy(true)
-    setError(null)
+    if (busy) return;
+    setBusy(true);
+    setError(null);
     try {
-      onChange?.(await operation())
-      setEditing(false)
+      onChange?.(await operation());
+      setEditing(false);
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Unable to update message"
-      )
+        cause instanceof Error ? cause.message : "Unable to update message",
+      );
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
   return (
     <MessageRoot
       id={"message-" + message.id}
@@ -101,14 +102,14 @@ export function Message({
       className={cn(
         "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-200 motion-reduce:transition-none",
         "transition-[opacity,transform] duration-200 ease-out",
-        removing && "translate-y-1 scale-[0.98] opacity-0"
+        removing && "translate-y-1 scale-[0.98] opacity-0",
       )}
     >
       <MessageAvatar
         aria-hidden={!showAvatar}
         className={cn(
           "self-start rounded-md group-has-data-[slot=message-footer]/message:translate-y-0",
-          !showAvatar && "invisible"
+          !showAvatar && "invisible",
         )}
       >
         <Avatar className="size-9 rounded-md">
@@ -153,7 +154,7 @@ export function Message({
                         changeMessengerMessage(message.id, {
                           content: draft,
                           version: editingVersion,
-                        })
+                        }),
                       )
                     }
                   >
@@ -186,8 +187,8 @@ export function Message({
                         reactMessengerMessage(
                           message.id,
                           reaction.emoji,
-                          reaction.userId === user?.id
-                        )
+                          reaction.userId === user?.id,
+                        ),
                       )
                     }
                   >
@@ -199,50 +200,52 @@ export function Message({
           </Bubble>
           {!message.deletedAt
             ? message.attachments.map((attachment) => (
-              <Bubble
-                key={attachment.id}
-                variant={isOwnMessage ? "default" : "muted"}
-                align={isOwnMessage ? "end" : "start"}
-                className="max-w-[min(100%,24rem)]"
-              >
-                <BubbleContent className="flex flex-col gap-2 rounded-md">
-                  {attachment.mimeType?.startsWith("image/") ? (
-                    // Authenticated same-origin image requests must carry the browser cookie.
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={attachment.fileUrl}
-                      alt={attachment.fileName}
-                      loading="lazy"
-                      className="max-h-72 rounded-md object-contain"
-                    />
-                  ) : attachment.mimeType?.startsWith("audio/") ? (
-                    <audio controls preload="none" src={attachment.fileUrl} />
-                  ) : attachment.mimeType?.startsWith("video/") ? (
-                    <video
-                      controls
-                      preload="none"
-                      src={attachment.fileUrl}
-                      className="max-h-72"
-                    />
-                  ) : null}
-                  <a
-                    href={attachment.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="break-all text-sm underline"
-                  >
-                    {attachment.fileName}
-                  </a>
-                </BubbleContent>
-              </Bubble>
-            ))
+                <Bubble
+                  key={attachment.id}
+                  variant={isOwnMessage ? "default" : "muted"}
+                  align={isOwnMessage ? "end" : "start"}
+                  className="max-w-[min(100%,24rem)]"
+                >
+                  <BubbleContent className="flex flex-col gap-2 rounded-md">
+                    {attachment.mimeType?.startsWith("image/") ? (
+                      // Authenticated same-origin image requests must carry the browser cookie.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={attachment.fileUrl}
+                        alt={attachment.fileName}
+                        loading="lazy"
+                        className="max-h-72 rounded-md object-contain"
+                      />
+                    ) : attachment.mimeType?.startsWith("audio/") ? (
+                      <audio controls preload="none" src={attachment.fileUrl} />
+                    ) : attachment.mimeType?.startsWith("video/") ? (
+                      <video
+                        controls
+                        preload="none"
+                        src={attachment.fileUrl}
+                        className="max-h-72"
+                      />
+                    ) : null}
+                    <a
+                      href={attachment.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="break-all text-sm underline"
+                    >
+                      {attachment.fileName}
+                    </a>
+                  </BubbleContent>
+                </Bubble>
+              ))
             : null}
         </BubbleGroup>
         {showFooter ? (
           <MessageFooter
             className={cn(
               "h-5 items-center gap-0 leading-5",
-              isOwnMessage ? "self-end justify-end" : "self-start justify-start"
+              isOwnMessage
+                ? "self-end justify-end"
+                : "self-start justify-start",
             )}
           >
             {isOwnMessage && showDeliveryStatus ? (
@@ -272,7 +275,12 @@ export function Message({
           </MessageFooter>
         ) : null}
         {!message.deletedAt && !pending ? (
-          <div className={cn("absolute bottom-full z-10 flex items-center gap-1 rounded-md bg-background opacity-0 transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 motion-reduce:transition-none", isOwnMessage ? "right-0" : "left-0")}>
+          <div
+            className={cn(
+              "absolute bottom-full z-10 flex items-center gap-1 rounded-md bg-background opacity-0 transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 motion-reduce:transition-none",
+              isOwnMessage ? "right-0" : "left-0",
+            )}
+          >
             <select
               aria-label="React to message"
               value=""
@@ -280,8 +288,8 @@ export function Message({
               onChange={(event) => {
                 if (event.target.value)
                   void act(() =>
-                    reactMessengerMessage(message.id, event.target.value)
-                  )
+                    reactMessengerMessage(message.id, event.target.value),
+                  );
               }}
               className="bg-transparent text-xs"
             >
@@ -296,9 +304,9 @@ export function Message({
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setDraft(message.content)
-                    setEditingVersion(message.version)
-                    setEditing(true)
+                    setDraft(message.content);
+                    setEditingVersion(message.version);
+                    setEditing(true);
                   }}
                 >
                   Edit
@@ -310,19 +318,17 @@ export function Message({
                   onClick={() => {
                     if (window.confirm("Delete this message for everyone?"))
                       void act(async () => {
-                        setRemoving(true)
+                        setRemoving(true);
                         try {
                           const [changed] = await Promise.all([
                             changeMessengerMessage(message.id, null),
-                            new Promise((resolve) =>
-                              setTimeout(resolve, 200)
-                            ),
-                          ])
-                          return changed
+                            new Promise((resolve) => setTimeout(resolve, 200)),
+                          ]);
+                          return changed;
                         } finally {
-                          setRemoving(false)
+                          setRemoving(false);
                         }
-                      })
+                      });
                   }}
                 >
                   Delete
@@ -335,14 +341,14 @@ export function Message({
                 disabled={busy}
                 onClick={() => {
                   const reason = window.prompt(
-                    "Reason for reporting this message"
-                  )
+                    "Reason for reporting this message",
+                  );
                   if (reason) {
-                    setBusy(true)
+                    setBusy(true);
                     void reportMessengerMessage(message.id, reason)
                       .then(() => setError("Report submitted"))
                       .catch(() => setError("Unable to submit report"))
-                      .finally(() => setBusy(false))
+                      .finally(() => setBusy(false));
                   }
                 }}
               >
@@ -358,5 +364,5 @@ export function Message({
         ) : null}
       </MessageContent>
     </MessageRoot>
-  )
+  );
 }

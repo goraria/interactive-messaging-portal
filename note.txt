@@ -1,4 +1,4 @@
-@gorth-io/chat
+@gorth-com/chat
 interactive-messaging
 ├── conversation
 │   ├── direct

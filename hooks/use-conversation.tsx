@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { createContext, useContext, type ReactNode } from "react"
-import { type ChatMessage, useRealtimeChat } from "@/hooks/use-realtime-chat"
+import { createContext, useContext, type ReactNode } from "react";
+import { type ChatMessage, useRealtimeChat } from "@/hooks/use-realtime-chat";
 
 interface ConversationContextValue {
-  open: boolean
-  toggle: () => void
+  open: boolean;
+  toggle: () => void;
 }
 
 const ConversationContext = createContext<ConversationContextValue | undefined>(
-  undefined
-)
+  undefined,
+);
 
 interface ConversationProviderProps {
-  children: ReactNode
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  children: ReactNode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ConversationProvider({
@@ -29,28 +29,28 @@ export function ConversationProvider({
     >
       {children}
     </ConversationContext.Provider>
-  )
+  );
 }
 
 export function useConversation() {
-  const context = useContext(ConversationContext)
+  const context = useContext(ConversationContext);
 
   if (!context) {
-    throw new Error("useConversation must be used within ConversationProvider")
+    throw new Error("useConversation must be used within ConversationProvider");
   }
 
-  return context
+  return context;
 }
 
 interface UseBroadcastOptions {
-  conversationId: string
-  username: string
-  userId?: string
-  onMessage?: (messages: ChatMessage[]) => void | Promise<void>
+  conversationId: string;
+  username: string;
+  userId?: string;
+  onMessage?: (messages: ChatMessage[]) => void | Promise<void>;
 }
 
 export function useBroadcast(options: UseBroadcastOptions) {
-  return useRealtimeChat(options)
+  return useRealtimeChat(options);
 }
 
-export type { ChatMessage }
+export type { ChatMessage };

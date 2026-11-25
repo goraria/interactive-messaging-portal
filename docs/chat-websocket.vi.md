@@ -25,8 +25,9 @@ Browser ─ HTTP ─ Next/Hono API ─ PostgreSQL chat_event/chat_delivery
 
 ## Xác thực và quyền
 
-- Socket tin nhắn: `/chat/conversation/:id/realtime/socket`.
-- Socket cuộc gọi đến: `/chat/realtime/call/socket`, danh tính luôn lấy từ session đã xác minh, không nhận userId do browser yêu cầu.
+- Socket tin nhắn: `/socket/:id/chat`, với `id` là conversation ID.
+- Socket cuộc gọi đến: `/socket/:id/call`, chỉ theo dõi hội thoại đã được kiểm tra quyền; danh tính luôn lấy từ session đã xác minh.
+- Preflight/descriptor: `/socket/:id/token`. Ba endpoint được khai báo trong `routes/socket.ts` và mount tại catch-all Next.
 - Cả hai kiểm tra exact Origin và dùng nguyên `requireAuth()`. Browser dùng cookie HttpOnly; không đưa OAuth/session token vào URL hoặc JavaScript.
 - Session được xác minh lại định kỳ 15 giây. Mỗi nhịp message kiểm tra membership và user status; incoming call dùng service hiện có, có kiểm tra membership, block và expiry.
 - WebSocket subscribe-only. Frame ngoài heartbeat pong bị từ chối; mọi mutation vẫn qua HTTP API.
@@ -45,7 +46,7 @@ Browser ─ HTTP ─ Next/Hono API ─ PostgreSQL chat_event/chat_delivery
 - Frame message chỉ chứa conversationId và sequence; không gửi text, attachment URL, SDP hoặc ICE.
 - Browser dùng HTTP replay có quyền để tải entity mới. Mỗi entity chỉ tải một lần trong một batch event, dù có nhiều receipt/reaction.
 - WebSocket khỏe thì không polling HTTP message. Recovery timer 15 giây chỉ chạy khi socket unavailable và tab đang hiển thị. Mất quyền dừng retry HTTP tự động.
-- Kết nối lại có backoff, preflight HTTP và replay. API cũ `.../realtime/token` giữ đường dẫn nhưng trả descriptor WebSocket, không trả token Ably.
+- Kết nối lại có backoff, preflight HTTP qua `/socket/:id/token` và replay. Endpoint trả descriptor WebSocket, không trả token Ably.
 
 ## Cuộc gọi: không polling REST khi chat rảnh
 
@@ -118,7 +119,7 @@ Nguồn: [Next instrumentation](https://nextjs.org/docs/app/guides/instrumentati
 
 ### Lịch sử kiểm chứng trước khi cài Primitive alpha.8
 
-- Sau đơn giản hóa Next config: `bun run build` đã chạy Turbopack nhưng bị chặn do dependency đang symlink ra ngoài project (`@gorth-io/*`, React, React DOM...), và không tải được Google Fonts trong môi trường kiểm tra. Không thêm root/alias hoặc tắt TypeScript để che lỗi. Cần cài lại dependency trước khi kiểm chứng build và WebSocket qua Next thực với proxy mới; chưa chứng nhận build thành công.
+- Sau đơn giản hóa Next config: `bun run build` đã chạy Turbopack nhưng bị chặn do dependency đang symlink ra ngoài project (`@gorth-com/*`, React, React DOM...), và không tải được Google Fonts trong môi trường kiểm tra. Không thêm root/alias hoặc tắt TypeScript để che lỗi. Cần cài lại dependency trước khi kiểm chứng build và WebSocket qua Next thực với proxy mới; chưa chứng nhận build thành công.
 - Sau khi người dùng cài lại dependency: symlink đã hết; build với quyền mạng không còn lỗi font nhưng vẫn báo 113 lỗi import Primitive. Package thực tế là `0.0.0-stage`, `stub: true`, không có code/exports; `bun.lock` cũng trỏ tới stage. Registry có `0.0.0-alpha.8` với exports và tarball chứa Message, Bubble, MessageScroller. Cần cài đúng bản thật thay placeholder trước khi kết luận build. Không tự chỉnh node_modules/lockfile.
 - Vitest sau lần cài lại: 40 file qua / 234 test qua; 3 suite UI không khởi chạy vì Primitive placeholder. Các lần test thành công trước đó dùng dependency symlink cũ, không được coi là bằng chứng cho dependency hiện tại.
 - Sau đổi sang `NEXT_WEBSOCKET_PORT=3030`: **242 test / 43 file qua**, lint phần sửa qua. Chạy `bun run dev` thực khởi động thành công; Next 3030 và listener Hono loopback 3037 cùng process, WebSocket upgrade qua 3030 trả 401 khi chưa đăng nhập. Không đọc/sửa `.env.local`; tên biến cũ được loại khỏi source/test/example/docs đang duy trì.

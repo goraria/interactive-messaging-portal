@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm"
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -12,7 +12,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
-} from "drizzle-orm/pg-core"
+} from "drizzle-orm/pg-core";
 
 // Better Auth owns app-local sessions; Gorth SSO remains the identity provider.
 export const userStatus = pgEnum("user_status", [
@@ -20,7 +20,7 @@ export const userStatus = pgEnum("user_status", [
   "inactive",
   "suspended",
   "deleted",
-])
+]);
 
 export const userTable = pgTable(
   "user",
@@ -57,8 +57,8 @@ export const userTable = pgTable(
     index("user_external_user_id_idx").on(table.externalUserId),
     index("user_status_idx").on(table.status),
     uniqueIndex("user_username_lower_key").on(sql`lower(${table.username})`),
-  ]
-)
+  ],
+);
 
 // Native Better Auth schemas; legacy auth rows are archived, never converted
 // into valid sessions or deleted during this migration.
@@ -84,8 +84,8 @@ export const sessionTable = pgTable(
   (table) => [
     index("native_session_user_idx").on(table.userId),
     index("native_session_sid_idx").on(table.ssoSessionId),
-  ]
-)
+  ],
+);
 
 export const accountTable = pgTable(
   "account",
@@ -118,11 +118,11 @@ export const accountTable = pgTable(
   (table) => [
     uniqueIndex("account_provider_subject_unique").on(
       table.providerId,
-      table.accountId
+      table.accountId,
     ),
     index("account_user_idx").on(table.userId),
-  ]
-)
+  ],
+);
 
 export const verificationTable = pgTable(
   "verification",
@@ -138,15 +138,15 @@ export const verificationTable = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("native_verification_identifier_idx").on(table.identifier)]
-)
+  (table) => [index("native_verification_identifier_idx").on(table.identifier)],
+);
 
 export const rateLimitTable = pgTable("rate_limit", {
   id: uuid("id").notNull().unique().defaultRandom(),
   key: text("key").primaryKey(),
   count: integer("count").notNull().default(0),
   lastRequest: bigint("last_request", { mode: "number" }).notNull(),
-})
+});
 
 export const legacySessionTable = pgTable(
   "legacy_session",
@@ -168,8 +168,8 @@ export const legacySessionTable = pgTable(
     index("session_user_index").on(table.userId),
     index("session_sso_session_index").on(table.ssoSessionId),
     index("session_expires_idx").on(table.expiresAt),
-  ]
-)
+  ],
+);
 
 export const legacyVerificationTable = pgTable(
   "legacy_verification",
@@ -177,8 +177,8 @@ export const legacyVerificationTable = pgTable(
     stateHash: text("state_hash").primaryKey(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },
-  (table) => [index("verification_expires_idx").on(table.expiresAt)]
-)
+  (table) => [index("verification_expires_idx").on(table.expiresAt)],
+);
 
 // Signed logout receipts; sid may be absent for a subject-wide logout.
 export const revocationTable = pgTable(
@@ -198,8 +198,8 @@ export const revocationTable = pgTable(
   (table) => [
     index("revocation_sid_idx").on(table.sid),
     index("revocation_expires_idx").on(table.expiresAt),
-  ]
-)
+  ],
+);
 
 // Consumed DPoP proof keys, not the JWT/proof itself. Reservation must be atomic.
 export const proofTable = pgTable(
@@ -211,5 +211,5 @@ export const proofTable = pgTable(
       withTimezone: true,
     }).notNull(),
   },
-  (table) => [index("proof_expires_idx").on(table.expiresAt)]
-)
+  (table) => [index("proof_expires_idx").on(table.expiresAt)],
+);

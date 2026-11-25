@@ -1,86 +1,82 @@
-"use client"
+"use client";
 
-import { useEffect, useMemo, useState } from "react"
-import { useParams } from "next/navigation"
-import { Badge } from "@gorth-io/primitive/custom/badge"
-import { Button } from "@gorth-io/primitive/custom/button"
-import {
-  Lock,
-  ArrowLeft,
-  UserRound,
-} from "@gorth-io/primitive/cores/lucide"
-import { infoSidebar } from "@/utils/constant"
-import { NavProfile } from "@gorth-io/primitive/dashboard/nav-user"
-import { NavMaster } from "@gorth-io/primitive/dashboard/nav-main"
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { Badge } from "@gorth-com/primitive/custom/badge";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Lock, ArrowLeft, UserRound } from "@gorth-com/primitive/cores/lucide";
+import { infoSidebar } from "@/utils/constant";
+import { NavProfile } from "@gorth-com/primitive/dashboard/nav-user";
+import { NavMaster } from "@gorth-com/primitive/dashboard/nav-main";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-} from "@gorth-io/primitive/custom/sidebar"
+} from "@gorth-com/primitive/custom/sidebar";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@gorth-io/primitive/default/dialog"
-import { InfoMute } from "@/components/conversation/info-mute"
-import { InfoAssets } from "@/components/conversation/info-assets"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { useLayout } from "@gorth-io/primitive/providers/layout"
-import { useUser } from "@/hooks/use-user"
-import { getConversationPeer } from "@/utils/conversation"
-import { readRouteId } from "@/utils/client/formatter"
-import { useConversationQuery } from "@/services/client/chat"
-import { ConversationTools } from "@/components/conversation/conversation-tools"
+} from "@gorth-com/primitive/default/dialog";
+import { InfoMute } from "@/components/conversation/info-mute";
+import { InfoAssets } from "@/components/conversation/info-assets";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { useLayout } from "@gorth-com/primitive/providers/layout";
+import { useUser } from "@/hooks/use-user";
+import { getConversationPeer } from "@/utils/conversation";
+import { readRouteId } from "@/utils/client/formatter";
+import { useConversationQuery } from "@/queries/chat";
+import { ConversationTools } from "@/components/conversation/conversation-tools";
 
 export function InfoSidebar() {
-  const { variant } = useLayout()
-  const params = useParams<{ id?: string | string[] }>()
-  const conversationId = readRouteId(params.id)
+  const { variant } = useLayout();
+  const params = useParams<{ id?: string | string[] }>();
+  const conversationId = readRouteId(params.id);
   const [screen, setScreen] = useState<{
-    id: string
-    view: "members" | "search" | "settings" | "media" | "files" | "links"
-  } | null>(null)
-  const [profileOpen, setProfileOpen] = useState(false)
-  const [muteOpen, setMuteOpen] = useState(false)
-  const view = screen?.id === conversationId ? screen.view : null
-  const { user } = useUser()
+    id: string;
+    view: "members" | "search" | "settings" | "media" | "files" | "links";
+  } | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [muteOpen, setMuteOpen] = useState(false);
+  const view = screen?.id === conversationId ? screen.view : null;
+  const { user } = useUser();
   const conversationQuery = useConversationQuery(
     conversationId,
-    Boolean(conversationId && user)
-  )
-  const conversation = conversationQuery.data ?? null
-  const [now, setNow] = useState(() => Date.now())
+    Boolean(conversationId && user),
+  );
+  const conversation = conversationQuery.data ?? null;
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!conversation?.mutedUntil) return
-    const remaining = new Date(conversation.mutedUntil).getTime() - Date.now()
-    if (remaining <= 0) return
+    if (!conversation?.mutedUntil) return;
+    const remaining = new Date(conversation.mutedUntil).getTime() - Date.now();
+    if (remaining <= 0) return;
     const timer = setTimeout(
       () => setNow(Date.now()),
-      Math.min(remaining + 1, 2147483647)
-    )
-    return () => clearTimeout(timer)
-  }, [conversation?.mutedUntil, now])
+      Math.min(remaining + 1, 2147483647),
+    );
+    return () => clearTimeout(timer);
+  }, [conversation?.mutedUntil, now]);
   const muted = Boolean(
     conversation?.mutedUntil &&
-    new Date(conversation.mutedUntil).getTime() > now
-  )
+    new Date(conversation.mutedUntil).getTime() > now,
+  );
   const peer = useMemo(
     () => (conversation ? getConversationPeer(conversation, user) : null),
-    [conversation, user]
-  )
+    [conversation, user],
+  );
   const name =
     conversation?.type === "direct"
       ? (peer?.name ?? "Conversation")
-      : (conversation?.title ?? conversation?.slug ?? "Conversation")
+      : (conversation?.title ?? conversation?.slug ?? "Conversation");
   const subtitle =
     conversation?.type === "direct"
       ? (peer?.email ?? "Direct message")
       : conversation
         ? `${conversation.members.length} members`
-        : "type"
-  const avatar = conversation?.type === "direct" ? peer?.image : null
+        : "type";
+  const avatar = conversation?.type === "direct" ? peer?.image : null;
 
   return (
     <Sidebar
@@ -89,7 +85,7 @@ export function InfoSidebar() {
       collapsible="offcanvas"
       className={cn(
         "absolute! inset-y-0! h-full! *:data-[sidebar=sidebar]:overflow-hidden",
-        variant === "inset" && "*:data-[sidebar=sidebar]:rounded-lg"
+        variant === "inset" && "*:data-[sidebar=sidebar]:rounded-lg",
       )}
     >
       {view ? (
@@ -103,7 +99,11 @@ export function InfoSidebar() {
             <ArrowLeft />
           </Button>
           <h2 className="font-medium capitalize">
-            {view === "settings" ? "Chat settings" : view === "media" || view === "files" || view === "links" ? "Media, files and links" : view}
+            {view === "settings"
+              ? "Chat settings"
+              : view === "media" || view === "files" || view === "links"
+                ? "Media, files and links"
+                : view}
           </h2>
         </SidebarHeader>
       ) : (
@@ -125,7 +125,13 @@ export function InfoSidebar() {
                 className="flex flex-col items-center gap-1"
               >
                 {item.label === "Mute" ? (
-                  <InfoMute key={String(muted)} conversationId={conversationId} muted={muted} open={muteOpen} onOpenChange={setMuteOpen} />
+                  <InfoMute
+                    key={String(muted)}
+                    conversationId={conversationId}
+                    muted={muted}
+                    open={muteOpen}
+                    onOpenChange={setMuteOpen}
+                  />
                 ) : (
                   <Button
                     variant="outline"
@@ -140,12 +146,12 @@ export function InfoSidebar() {
                         item.view === "members" &&
                         conversation?.type === "direct"
                       )
-                        setProfileOpen(true)
-                      else setScreen({ id: conversationId, view: item.view })
+                        setProfileOpen(true);
+                      else setScreen({ id: conversationId, view: item.view });
                     }}
                   >
                     {item.view === "members" &&
-                      conversation?.type === "direct" ? (
+                    conversation?.type === "direct" ? (
                       <UserRound />
                     ) : (
                       <item.icon />
@@ -168,7 +174,9 @@ export function InfoSidebar() {
             key={"assets:" + conversationId}
             conversationId={conversationId}
             kind={view}
-            onKindChange={(kind) => setScreen({ id: conversationId, view: kind })}
+            onKindChange={(kind) =>
+              setScreen({ id: conversationId, view: kind })
+            }
           />
         ) : view ? (
           <ConversationTools
@@ -177,26 +185,46 @@ export function InfoSidebar() {
             view={view}
           />
         ) : null}
-          <div key={"navigation:" + conversationId} hidden={Boolean(view)} onClickCapture={(event) => {
-            const href = (event.target as Element).closest("a")?.getAttribute("href")
-            const target = href?.startsWith("#") ? href.slice(1) : null
+        <div
+          key={"navigation:" + conversationId}
+          hidden={Boolean(view)}
+          onClickCapture={(event) => {
+            const href = (event.target as Element)
+              .closest("a")
+              ?.getAttribute("href");
+            const target = href?.startsWith("#") ? href.slice(1) : null;
             if (target?.startsWith("todo-")) {
-              event.preventDefault()
-              event.stopPropagation()
-              return
+              event.preventDefault();
+              event.stopPropagation();
+              return;
             }
-            if (target === "mute" || target === "members" || target === "search" || target === "settings" || target === "media" || target === "files" || target === "links") {
-              event.preventDefault()
-              event.stopPropagation()
-              if (target === "mute") setMuteOpen(true)
-              else setScreen({ id: conversationId, view: target })
+            if (
+              target === "mute" ||
+              target === "members" ||
+              target === "search" ||
+              target === "settings" ||
+              target === "media" ||
+              target === "files" ||
+              target === "links"
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              if (target === "mute") setMuteOpen(true);
+              else setScreen({ id: conversationId, view: target });
             }
-          }}>
-            <NavMaster items={[
-              ...infoSidebar.navMain.filter((group) => !group.groupOnly || conversation?.type !== "direct"),
-              ...(conversation?.type === "direct" ? infoSidebar.navSub : infoSidebar.navGroup),
-            ]} />
-          </div>
+          }}
+        >
+          <NavMaster
+            items={[
+              ...infoSidebar.navMain.filter(
+                (group) => !group.groupOnly || conversation?.type !== "direct",
+              ),
+              ...(conversation?.type === "direct"
+                ? infoSidebar.navSub
+                : infoSidebar.navGroup),
+            ]}
+          />
+        </div>
       </SidebarContent>
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent>
@@ -211,5 +239,5 @@ export function InfoSidebar() {
         </DialogContent>
       </Dialog>
     </Sidebar>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation"
+import { redirect } from "next/navigation";
 
-import { authUrl } from "@/utils/environment"
+import { authUrl } from "@/utils/environment";
 
 export default function AccountPage() {
-  redirect(new URL("/setting", authUrl).toString())
+  redirect(new URL("/setting", authUrl).toString());
 }

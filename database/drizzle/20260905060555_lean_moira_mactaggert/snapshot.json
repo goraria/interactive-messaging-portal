@@ -1,8 +1,6 @@
 {
   "id": "ae1833c4-2b0f-4750-bdcb-25faf493404b",
-  "prevIds": [
-    "74fb3513-8e8c-4d6f-b97b-500a0001c4a1"
-  ],
+  "prevIds": ["74fb3513-8e8c-4d6f-b97b-500a0001c4a1"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -130,10 +128,7 @@
       "entityType": "columns"
     },
     {
-      "columns": [
-        "conversation_id",
-        "user_id"
-      ],
+      "columns": ["conversation_id", "user_id"],
       "nameExplicit": true,
       "name": "conversation_members_pk",
       "schema": "public",
@@ -184,14 +179,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_members_conversation_id_conversations_id_fk",
@@ -201,14 +192,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "conversation_members_user_id_users_id_fk",
@@ -218,14 +205,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "last_read_message_id"
-      ],
+      "columns": ["last_read_message_id"],
       "schemaTo": "public",
       "tableTo": "messages",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "conversation_members_last_read_message_id_messages_id_fk",
@@ -240,9 +223,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "conversations_pkey",
       "schema": "public",
@@ -410,14 +391,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "created_by_id"
-      ],
+      "columns": ["created_by_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "conversations_created_by_id_users_id_fk",
@@ -432,9 +409,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "message_attachments_pkey",
       "schema": "public",
@@ -568,14 +543,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "message_id"
-      ],
+      "columns": ["message_id"],
       "schemaTo": "public",
       "tableTo": "messages",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_attachments_message_id_messages_id_fk",
@@ -590,9 +561,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "message_reactions_pkey",
       "schema": "public",
@@ -722,14 +691,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "message_id"
-      ],
+      "columns": ["message_id"],
       "schemaTo": "public",
       "tableTo": "messages",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_reactions_message_id_messages_id_fk",
@@ -739,14 +704,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_reactions_user_id_users_id_fk",
@@ -761,9 +722,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "message_receipts_pkey",
       "schema": "public",
@@ -932,14 +891,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "message_id"
-      ],
+      "columns": ["message_id"],
       "schemaTo": "public",
       "tableTo": "messages",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_receipts_message_id_messages_id_fk",
@@ -949,14 +904,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "message_receipts_user_id_users_id_fk",
@@ -971,9 +922,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "messages_pkey",
       "schema": "public",
@@ -1182,14 +1131,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "conversation_id"
-      ],
+      "columns": ["conversation_id"],
       "schemaTo": "public",
       "tableTo": "conversations",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "messages_conversation_id_conversations_id_fk",
@@ -1199,14 +1144,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "sender_id"
-      ],
+      "columns": ["sender_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "messages_sender_id_users_id_fk",
@@ -1221,9 +1162,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -1401,9 +1340,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "external_user_id"
-      ],
+      "columns": ["external_user_id"],
       "nullsNotDistinct": false,
       "name": "users_external_user_id_unique",
       "schema": "public",
@@ -1412,9 +1349,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "username"
-      ],
+      "columns": ["username"],
       "nullsNotDistinct": false,
       "name": "users_username_unique",
       "schema": "public",
@@ -1423,9 +1358,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",
@@ -1475,42 +1408,25 @@
       "entityType": "indexes"
     },
     {
-      "values": [
-        "owner",
-        "admin",
-        "member"
-      ],
+      "values": ["owner", "admin", "member"],
       "name": "conversation_member_role_enum",
       "schema": "public",
       "entityType": "enums"
     },
     {
-      "values": [
-        "direct",
-        "group",
-        "channel"
-      ],
+      "values": ["direct", "group", "channel"],
       "name": "conversation_type_enum",
       "schema": "public",
       "entityType": "enums"
     },
     {
-      "values": [
-        "sent",
-        "delivered",
-        "read"
-      ],
+      "values": ["sent", "delivered", "read"],
       "name": "message_delivery_status_enum",
       "schema": "public",
       "entityType": "enums"
     },
     {
-      "values": [
-        "text",
-        "system",
-        "image",
-        "file"
-      ],
+      "values": ["text", "system", "image", "file"],
       "name": "message_type_enum",
       "schema": "public",
       "entityType": "enums"

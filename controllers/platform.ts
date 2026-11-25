@@ -1,6 +1,6 @@
-import "server-only"
-import type { Context } from "hono"
-import type { SessionEnv } from "@/middlewares/session"
+import "server-only";
+import type { Context } from "hono";
+import type { SessionEnv } from "@/middlewares/session";
 import {
   oauthDiscoveryAudience,
   oauthNotifyAudience,
@@ -9,13 +9,15 @@ import {
   oauthBillingAudience,
   oauthMediaAudience,
   oauthInsightAudience,
+  oauthCommerceAudience,
   isProduction,
-} from "@/utils/environment"
-import { forwardRouteRequest } from "@/services/route"
+} from "@/utils/environment";
+import { rawForwardRouteRequest } from "@/services/route";
 
-export async function forwardPlatform(context: Context<SessionEnv>) {
-  const source = new URL(context.req.url)
-  const domain = source.pathname.split("/")[1]
+export async function actForwardPlatform(context: Context<SessionEnv>) {
+  const source = new URL(context.req.url);
+  const pathname = source.pathname.slice("/external".length);
+  const domain = pathname.split("/")[1];
   const upstream =
     domain === "resource"
       ? oauthResourceAudience
@@ -31,9 +33,11 @@ export async function forwardPlatform(context: Context<SessionEnv>) {
                 ? oauthMediaAudience
                 : domain === "insight"
                   ? oauthInsightAudience
-                  : ""
-  if (!upstream) return context.json({ error: "service_unavailable" }, 503)
-  const base = new URL(upstream)
+                  : domain === "commerce"
+                    ? oauthCommerceAudience
+                    : "";
+  if (!upstream) return context.json({ error: "service_unavailable" }, 503);
+  const base = new URL(upstream);
   if (
     base.username ||
     base.password ||
@@ -45,19 +49,19 @@ export async function forwardPlatform(context: Context<SessionEnv>) {
         base.protocol !== "http:" ||
         !["localhost", "127.0.0.1", "[::1]"].includes(base.hostname)))
   )
-    return context.json({ error: "service_unavailable" }, 503)
-  const target = new URL(base)
+    return context.json({ error: "service_unavailable" }, 503);
+  const target = new URL(base);
   // Assign the pathname, never resolve browser input as an absolute URL.
-  target.pathname = source.pathname
-  target.search = source.search
+  target.pathname = pathname;
+  target.search = source.search;
   if (domain === "discovery" && ["GET", "HEAD"].includes(context.req.method))
-    target.searchParams.set("application", "chat")
+    target.searchParams.set("application", "chat");
   if (
     domain === "billing" &&
-    ["/billing/catalog", "/billing/entitlement"].includes(source.pathname)
+    ["/billing/catalog", "/billing/entitlement"].includes(pathname)
   )
-    target.searchParams.set("application", "chat")
-  const headers = new Headers()
+    target.searchParams.set("application", "chat");
+  const headers = new Headers();
   for (const name of [
     "accept",
     "content-type",
@@ -66,30 +70,30 @@ export async function forwardPlatform(context: Context<SessionEnv>) {
     "idempotency-key",
     "x-request-id",
   ]) {
-    const value = context.req.header(name)
-    if (value) headers.set(name, value)
+    const value = context.req.header(name);
+    if (value) headers.set(name, value);
   }
   headers.set(
     "authorization",
-    `Bearer ${context.get("credentials").credentials.accessToken}`
-  )
-  const authCookies = context.res.headers.getSetCookie()
+    `Bearer ${context.get("credentials").credentials.accessToken}`,
+  );
+  const authCookies = context.res.headers.getSetCookie();
   try {
-    const result = await forwardRouteRequest({
+    const result = await rawForwardRouteRequest({
       url: target,
       method: context.req.method,
       headers,
       body: ["GET", "HEAD"].includes(context.req.method)
         ? undefined
         : await context.req.arrayBuffer(),
-    })
+    });
     // A platform response must not overwrite this application's session cookies.
-    result.headers.delete("set-cookie")
+    result.headers.delete("set-cookie");
     for (const cookie of authCookies)
-      result.headers.append("Set-Cookie", cookie)
-    result.headers.delete("location")
-    return result
+      result.headers.append("Set-Cookie", cookie);
+    result.headers.delete("location");
+    return result;
   } catch {
-    return context.json({ error: "service_unavailable" }, 502)
+    return context.json({ error: "service_unavailable" }, 502);
   }
 }

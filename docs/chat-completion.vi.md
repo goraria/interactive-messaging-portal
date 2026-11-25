@@ -1,5 +1,7 @@
 # GorCer Chat — triển khai và kiểm chứng
 
+> OAuth update — 2026-11-13: all confidential SSO token exchanges use fixed `client_secret_basic` in code; there is no auth-method environment selector. Business APIs keep `Bearer` tokens. Public PKCE clients keep `none`. A registered Post client needs a native Basic replacement and coordinated ID/secret/binding cutover.
+
 > Realtime update (2026-11-07): Chat đã thay Ably bằng Hono WebSocket. Cấu hình/các kết quả Ably trong lịch sử kiểm chứng phía dưới không mô tả runtime hiện tại. Xem [Hono WebSocket: vận hành và kiểm thử](./chat-websocket.vi.md).
 
 > Update 2026-11-11: Runtime hiện dùng Hono Node + `ws`, tự khởi tạo qua Next instrumentation với lệnh `next dev/start` thuần. Message UI dùng Primitive Message/Bubble/custom Avatar/MessageScroller. Cuộc gọi đến dùng WebSocket, không còn polling REST khi chat rảnh; lịch sử chỉ tải khi mở, signaling chỉ chạy trong cuộc gọi active.
@@ -10,42 +12,42 @@ Ngày: 28/10/2026. Phạm vi mã nguồn: Chat, cùng API bổ sung trong Media,
 
 ## 1. Những luồng đã triển khai
 
-| Năng lực | Hành vi hiện tại | Mã nguồn chính |
-| --- | --- | --- |
-| Hội thoại | Tạo direct hai người hoặc group trong transaction; dedupe direct khi tạo đồng thời; owner và thành viên được thêm cùng lúc. | `services/chat-conversations.ts`, `components/conversation/new-group.tsx` |
-| Thành viên | Phân cấp owner/admin/member, thêm/loại/rời nhóm, chuyển owner, không cho admin quản lý owner hoặc tự nâng quyền. Kiểm tra membership sau khi khóa conversation; rejoin chỉ đọc lịch sử từ lần tham gia mới. | `services/helper.ts`, `services/chat-conversations.ts` |
-| Tin nhắn | Gửi có client message UUID và fingerprint chống retry khác payload; ghi message + event/outbox cùng transaction. Sửa bằng optimistic version; xóa thành tombstone và không trả nội dung/metadata/attachment đã xóa. | `services/chat-messages.ts` |
-| Realtime | Hono WebSocket chỉ phát `chat.changed` với conversation/sequence, không phát text, URL asset, SDP hoặc ICE. Handshake dùng session hiện có, membership kiểm tra mỗi nhịp đọc, session kiểm tra lại định kỳ. | `lib/realtime/`, `services/realtime.ts`, `services/chat-delivery.ts` |
-| Replay | Event log có sequence; client bù event khi online trở lại, phân trang event và tải lại entity hiện tại. Polling DB-backed API tiếp tục hoạt động khi socket lỗi; không khóa nút gửi theo trạng thái socket. | `hooks/use-realtime-chat.tsx` |
-| Lịch sử | Cursor theo timestamp có microsecond + UUID; không dùng offset cho message. Tìm text trong conversation; giữ vị trí viewport khi prepend trang cũ. | `services/chat-messages.ts`, `utils/chat-policy.ts`, `components/conversation/broadcast.tsx` |
-| Đồng bộ nhiều thiết bị | Merge theo message version và event sequence dạng bigint string, tránh response reaction/receipt cũ ghi đè state mới. Editor giữ version lúc bắt đầu sửa để phát hiện draft cũ. | `utils/messenger.ts`, `components/conversation/message.tsx` |
-| Attachment | Chọn file → tạo upload qua Media → browser PUT có tiến độ/hủy/timeout → complete tại Media → xác minh owner/private/ready/conversation → gắn asset vào message trong transaction. Không nhận URL file tùy ý từ browser. | `services/chat-media.ts`, `services/client/messenger.ts` |
-| Kiểm tra file | Giới hạn MIME/25 MiB/10 asset; Media đối chiếu HEAD size/type và chữ ký byte cơ bản cho attachment Chat. SVG/HTML/JS không nằm trong danh sách MIME. Không coi sniffing này là antivirus. | `media-storage/utils/chat-media.ts`, `media-storage/services/media.ts` |
-| Tải file | Chat kiểm tra membership, thời điểm tham gia và tombstone; chỉ ký asset đã bind đúng conversation. Media trả URL download 60 giây; browser không nhận storage credentials. | `services/chat-media.ts`, `media-storage/services/chat.ts` |
-| Giọng nói | Browser MediaRecorder xin quyền microphone theo thao tác người dùng, hỗ trợ format trình duyệt cung cấp, dừng track khi xong/rời trang và upload như attachment. Giới hạn ghi âm 5 phút và giới hạn file chung. | `components/conversation/broadcast.tsx` |
-| Reaction | Thêm/bỏ emoji theo người đang xác thực, unique key chống trùng; response và replay giữ đúng state. | `services/chat-messages.ts`, `components/conversation/message.tsx` |
-| Read/unread | Receipt không lùi từ read về delivered; last-read cursor không lùi khi thiết bị khác ACK tin cũ. Unread chỉ tính tin của người khác sau mốc đọc và sau lần join hiện tại. | `services/chat-messages.ts`, `services/chat-conversations.ts` |
-| Gọi | WebRTC **1:1** audio/video; signaling bền vững có quyền, trạng thái ringing/active/ended/rejected, timeout, dedupe và giới hạn gửi. Có incoming banner, accept/reject/end, mute mic, ICE restart phía caller và lịch sử cuộc gọi gần nhất. | `services/chat-calls.ts`, `components/conversation/call-controls.tsx`, `lib/webrtc/signaling.ts` |
-| Block | Chặn giao tiếp hai chiều, kết thúc call liên quan; vẫn cho thao tác quản trị/rời nhóm/mute phù hợp để block không khóa cứng người quản lý. | `services/chat-conversations.ts` |
-| Report | Kiểm tra quyền message trước khi gửi report bằng token người dùng tới Resource; không tạo report table trong Chat. | `services/chat-reports.ts` |
-| Rate limit | Giới hạn bền vững theo người gửi: 30 message/phút, 5 conversation/phút, 5 call/phút. Khóa theo actor + conversation cho mutation liên quan. Không mô tả bộ giới hạn theo tiến trình là giới hạn toàn hệ. | `services/chat-conversations.ts`, `services/chat-messages.ts`, `services/chat-calls.ts` |
-| Notification | Outbox gửi Notify event có dedup key; lọc thành viên hiện tại, mute và block. Preview chung không chứa text. Preference và endpoint đã xác minh do Notify quản lý; delivery email/push nằm ở worker Notify. | `services/chat-delivery.ts`, `/setting/notification` |
-| Vận hành | Lease token, `SKIP LOCKED`, retry exponential, ACK có fence, độc lập từng destination. Sau 20 lần lỗi, manager xem trạng thái và retry từ conversation info. | `services/chat-delivery.ts`, `services/chat-delivery-status.ts`, `services/background.ts` |
-| UI | Thay menu mail/video template bằng Inbox, Groups, Archived, Notification, Billing. Có tạo nhóm, quản lý thành viên, search, mute/block và trạng thái delivery trong conversation info. | `utils/constant.ts`, `components/conversation/*` |
+| Năng lực               | Hành vi hiện tại                                                                                                                                                                                                                           | Mã nguồn chính                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Hội thoại              | Tạo direct hai người hoặc group trong transaction; dedupe direct khi tạo đồng thời; owner và thành viên được thêm cùng lúc.                                                                                                                | `models/conversation.ts`, `components/conversation/new-group.tsx`                        |
+| Thành viên             | Phân cấp owner/admin/member, thêm/loại/rời nhóm, chuyển owner, không cho admin quản lý owner hoặc tự nâng quyền. Kiểm tra membership sau khi khóa conversation; rejoin chỉ đọc lịch sử từ lần tham gia mới.                                | `models/index.ts`, `models/conversation.ts`                                           |
+| Tin nhắn               | Gửi có client message UUID và fingerprint chống retry khác payload; ghi message + event/outbox cùng transaction. Sửa bằng optimistic version; xóa thành tombstone và không trả nội dung/metadata/attachment đã xóa.                        | `models/message.ts`                                                                      |
+| Realtime               | Hono WebSocket chỉ phát `chat.changed` với conversation/sequence, không phát text, URL asset, SDP hoặc ICE. Handshake dùng session hiện có, membership kiểm tra mỗi nhịp đọc, session kiểm tra lại định kỳ.                                | `lib/realtime/`, `services/realtime.ts`, `models/chat-delivery.ts`                             |
+| Replay                 | Event log có sequence; client bù event khi online trở lại, phân trang event và tải lại entity hiện tại. Polling DB-backed API tiếp tục hoạt động khi socket lỗi; không khóa nút gửi theo trạng thái socket.                                | `hooks/use-realtime-chat.tsx`                                                                    |
+| Lịch sử                | Cursor theo timestamp có microsecond + UUID; không dùng offset cho message. Tìm text trong conversation; giữ vị trí viewport khi prepend trang cũ.                                                                                         | `models/message.ts`, `utils/chat-policy.ts`, `components/conversation/broadcast.tsx`     |
+| Đồng bộ nhiều thiết bị | Merge theo message version và event sequence dạng bigint string, tránh response reaction/receipt cũ ghi đè state mới. Editor giữ version lúc bắt đầu sửa để phát hiện draft cũ.                                                            | `utils/messenger.ts`, `components/conversation/message.tsx`                                      |
+| Attachment             | Chọn file → tạo upload qua Media → browser PUT có tiến độ/hủy/timeout → complete tại Media → xác minh owner/private/ready/conversation → gắn asset vào message trong transaction. Không nhận URL file tùy ý từ browser.                    | `services/chat-media.ts`, `queries/messenger.ts`                                         |
+| Kiểm tra file          | Giới hạn MIME/25 MiB/10 asset; Media đối chiếu HEAD size/type và chữ ký byte cơ bản cho attachment Chat. SVG/HTML/JS không nằm trong danh sách MIME. Không coi sniffing này là antivirus.                                                  | `media-storage/utils/chat-media.ts`, `media-storage/services/media.ts`                           |
+| Tải file               | Chat kiểm tra membership, thời điểm tham gia và tombstone; chỉ ký asset đã bind đúng conversation. Media trả URL download 60 giây; browser không nhận storage credentials.                                                                 | `services/chat-media.ts`, `media-storage/services/chat.ts`                                       |
+| Giọng nói              | Browser MediaRecorder xin quyền microphone theo thao tác người dùng, hỗ trợ format trình duyệt cung cấp, dừng track khi xong/rời trang và upload như attachment. Giới hạn ghi âm 5 phút và giới hạn file chung.                            | `components/conversation/broadcast.tsx`                                                          |
+| Reaction               | Thêm/bỏ emoji theo người đang xác thực, unique key chống trùng; response và replay giữ đúng state.                                                                                                                                         | `models/message.ts`, `components/conversation/message.tsx`                               |
+| Read/unread            | Receipt không lùi từ read về delivered; last-read cursor không lùi khi thiết bị khác ACK tin cũ. Unread chỉ tính tin của người khác sau mốc đọc và sau lần join hiện tại.                                                                  | `models/message.ts`, `models/conversation.ts`                                    |
+| Gọi                    | WebRTC **1:1** audio/video; signaling bền vững có quyền, trạng thái ringing/active/ended/rejected, timeout, dedupe và giới hạn gửi. Có incoming banner, accept/reject/end, mute mic, ICE restart phía caller và lịch sử cuộc gọi gần nhất. | `models/chat-call.ts`, `components/conversation/call-controls.tsx`, `lib/webrtc/signaling.ts` |
+| Block                  | Chặn giao tiếp hai chiều, kết thúc call liên quan; vẫn cho thao tác quản trị/rời nhóm/mute phù hợp để block không khóa cứng người quản lý.                                                                                                 | `models/conversation.ts`                                                                 |
+| Report                 | Kiểm tra quyền message trước khi gửi report bằng token người dùng tới Resource; không tạo report table trong Chat.                                                                                                                         | `services/chat-reports.ts`                                                                       |
+| Rate limit             | Giới hạn bền vững theo người gửi: 30 message/phút, 5 conversation/phút, 5 call/phút. Khóa theo actor + conversation cho mutation liên quan. Không mô tả bộ giới hạn theo tiến trình là giới hạn toàn hệ.                                   | `models/conversation.ts`, `models/message.ts`, `models/chat-call.ts`          |
+| Notification           | Outbox gửi Notify event có dedup key; lọc thành viên hiện tại, mute và block. Preview chung không chứa text. Preference và endpoint đã xác minh do Notify quản lý; delivery email/push nằm ở worker Notify.                                | `models/chat-delivery.ts`, `/setting/notification`                                             |
+| Vận hành               | Lease token, `SKIP LOCKED`, retry exponential, ACK có fence, độc lập từng destination. Sau 20 lần lỗi, manager xem trạng thái và retry từ conversation info.                                                                               | `models/chat-delivery.ts`, `models/chat-delivery.ts`, `services/background.ts`        |
+| UI                     | Thay menu mail/video template bằng Inbox, Groups, Archived, Notification, Billing. Có tạo nhóm, quản lý thành viên, search, mute/block và trạng thái delivery trong conversation info.                                                     | `utils/constant.ts`, `components/conversation/*`                                                 |
 
 Endpoint room tự tạo/tự join và endpoint nhận raw attachment URL đã được gỡ. Các controller/service CRUD cũ không còn sử dụng cũng được gỡ, tránh vô tình khôi phục đường truy cập đó. Route Handler giữ tên API riêng trước dynamic page `/chat/[id]`.
 
 ## 2. Dùng đúng 7 service
 
-| Service | Chat dùng để làm gì | Dữ liệu không sao chép vào Chat |
-| --- | --- | --- |
-| Resource | Report message bằng identity người báo cáo. | Report/moderation report store. |
-| Notify | Event notification, dedup, preferences, verified endpoints, delivery queue/provider. | Notification, endpoint, delivery và preference tables. |
-| Discovery | Đồng bộ private message index bằng revision; endpoint riêng chỉ nhận Chat machine grant và trả ID theo conversation/cutoff. Chat kiểm tra lại membership, tombstone và nội dung hiện tại trước khi trả kết quả. Search công khai hiện có vẫn loại private documents. | Search index/document/facet tables. |
-| Media | Upload/session/object verification/storage profile, asset, ký download và xử lý file. Endpoint Chat bổ sung chỉ inspect/sign asset thuộc application Chat và conversation tương ứng. | Media asset, upload session, bucket và provider credentials metadata. |
-| Insight | Event idempotent với tên hành động và ID; không chuyển text, filename, SDP, ICE, URL ký hoặc key vào analytics. | Analytics/audit/moderation/risk tables. |
-| Billing | Catalog, subscription, invoice và entitlement tại `/billing`. | Product/plan/subscription/invoice/entitlement tables. |
-| Payment | Hosted checkout hoặc Stripe Payment Element, xem trạng thái và reconcile invoice qua Billing. Số tiền lấy từ invoice ở backend. | Payment intent/transaction/provider ledger. |
+| Service   | Chat dùng để làm gì                                                                                                                                                                                                                                                  | Dữ liệu không sao chép vào Chat                                       |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Resource  | Report message bằng identity người báo cáo.                                                                                                                                                                                                                          | Report/moderation report store.                                       |
+| Notify    | Event notification, dedup, preferences, verified endpoints, delivery queue/provider.                                                                                                                                                                                 | Notification, endpoint, delivery và preference tables.                |
+| Discovery | Đồng bộ private message index bằng revision; endpoint riêng chỉ nhận Chat machine grant và trả ID theo conversation/cutoff. Chat kiểm tra lại membership, tombstone và nội dung hiện tại trước khi trả kết quả. Search công khai hiện có vẫn loại private documents. | Search index/document/facet tables.                                   |
+| Media     | Upload/session/object verification/storage profile, asset, ký download và xử lý file. Endpoint Chat bổ sung chỉ inspect/sign asset thuộc application Chat và conversation tương ứng.                                                                                 | Media asset, upload session, bucket và provider credentials metadata. |
+| Insight   | Event idempotent với tên hành động và ID; không chuyển text, filename, SDP, ICE, URL ký hoặc key vào analytics.                                                                                                                                                      | Analytics/audit/moderation/risk tables.                               |
+| Billing   | Catalog, subscription, invoice và entitlement tại `/billing`.                                                                                                                                                                                                        | Product/plan/subscription/invoice/entitlement tables.                 |
+| Payment   | Hosted checkout hoặc Stripe Payment Element, xem trạng thái và reconcile invoice qua Billing. Số tiền lấy từ invoice ở backend.                                                                                                                                      | Payment intent/transaction/provider ledger.                           |
 
 Media, Discovery và Insight có endpoint `/.../chat/...` riêng. Endpoint/scope của Task vẫn giữ nguyên; không chuyển Task qua controller Chat hoặc thay verifier/user-auth của service.
 
@@ -73,26 +75,25 @@ Test cloud chỉ tạo user/conversation UUID riêng của lượt test, chỉ d
 
 ### Chat backend
 
-Giữ nguyên cấu hình đăng nhập hiện có. Thêm/cấu hình **một confidential backend client đã có**, dùng chung cho mọi tác vụ server-to-server của Chat:
+Chat dùng **một confidential client** cho cả đăng nhập genericOAuth có PKCE và tác vụ server-to-server. Hai luồng dùng token và scope riêng:
 
 ```dotenv
 NEXT_OAUTH_CLIENT_ID=<existing-chat-confidential-client>
 NEXT_OAUTH_CLIENT_SECRET=<existing-client-secret>
-NEXT_OAUTH_TOKEN_ENDPOINT_AUTH_METHOD=client_secret_basic
 ```
 
-Phương thức phải khớp đăng ký hiện tại (`client_secret_basic` hoặc `client_secret_post`). Không dùng `NEXT_PUBLIC_OAUTH_CLIENT_ID` hoặc session secret thay cho confidential credentials; không tạo client riêng cho từng worker/endpoint. Nếu chưa có confidential backend client thật, cần cấp tại SSO; không thể suy ra secret từ public client ID.
+Phương thức phải khớp đăng ký SSO (`client_secret_basic`). Client cần Authorization Code + refresh + client_credentials, requirePKCE=true và callback chính xác. Không dùng session secret làm OAuth secret. Public client cũ không thể đổi auth method tại chỗ; đăng ký confidential client bằng API native, giữ client cũ đến khi chuyển cấu hình và kiểm thử xong.
 
-Server URL/resource của 7 service vẫn là `NEXT_OAUTH_*_AUDIENCE` trong `.env.example`; production dùng HTTPS và cùng issuer SSO đang phát token. Không đưa token hoặc URL private upstream vào browser. Public app client phải có resource/scope cần thiết cho thao tác người dùng tại Media/Resource/Billing/Payment; session đã cấp trước đó có thể cần đăng nhập/consent lại sau khi operator cập nhật registry. Code đăng nhập không bị chỉnh để tự thêm/bỏ kiểm tra resource.
+Server URL/resource của 7 service vẫn là `NEXT_OAUTH_*_AUDIENCE` trong `.env.example`; production dùng HTTPS và cùng issuer SSO. Client hợp nhất cần resource link và binding client→chat chính xác ở service; client_credentials_scopes chỉ chứa quyền máy đã được duyệt. Session cũ có thể cần đăng nhập/consent lại sau chuyển cấu hình. Secret chỉ được gửi từ backend tới token endpoint; không vào authorize URL hoặc trình duyệt.
 
-| Caller | Resource/audience | Machine scope | TTL tối đa |
-| --- | --- | --- | --- |
-| Chat backend | `NEXT_OAUTH_AUDIENCE` hiện tại | `chat:dispatch` | 600 giây |
-| Chat backend | Origin Notify | `chat:notification:publish` | 600 giây |
-| Chat backend | Origin Discovery | `chat:discovery:write` | 600 giây |
-| Chat backend | Origin Media | `chat:media:delegate` | 600 giây |
-| Chat backend | Origin Insight | `chat:insight:publish` | 600 giây |
-| Media backend hiện có | URL đầy đủ `https://<chat-host>/internal/storage/credential` | `storage:chat:credential` | 120 giây |
+| Caller                | Resource/audience                                            | Machine scope               | TTL tối đa |
+| --------------------- | ------------------------------------------------------------ | --------------------------- | ---------- |
+| Chat backend          | `NEXT_OAUTH_AUDIENCE` hiện tại                               | `chat:dispatch`             | 600 giây   |
+| Chat backend          | Origin Notify                                                | `chat:notification:publish` | 600 giây   |
+| Chat backend          | Origin Discovery                                             | `chat:discovery:write`      | 600 giây   |
+| Chat backend          | Origin Media                                                 | `chat:media:delegate`       | 600 giây   |
+| Chat backend          | Origin Insight                                               | `chat:insight:publish`      | 600 giây   |
+| Media backend hiện có | URL đầy đủ `https://<chat-host>/internal/storage/credential` | `storage:chat:credential`   | 120 giây   |
 
 Cấp `client_credentials`, `client_credentials_scopes`, `allowedScopes` và link resource trên các client/resource hiện có tại SSO. **Chỉ Media được cấp scope lấy storage credentials của Chat.** Resource report dùng token người dùng; không cần bịa thêm machine scope report. Không sửa registry SSO thật hoặc tạo client/secret trong đợt này.
 
@@ -108,7 +109,7 @@ AWS_BUCKET=<actual-bucket>
 
 Đăng ký storage profile application Chat trong registry Media qua API quản trị hiện có: endpoint/region/bucket khớp env Chat, `credentialsUrl=https://<chat-host>/internal/storage/credential`. Metadata không chứa key. Tạo Media bucket private của Chat, cho phép type cần dùng và giới hạn file phù hợp. Cấu hình CORS storage cho browser PUT từ origin Chat. Không hardcode bucket thật trong code.
 
-Media tiếp tục dùng confidential client hiện có qua `NITRO_OAUTH_CLIENT_ID`, `NITRO_OAUTH_CLIENT_SECRET`, `NITRO_OAUTH_TOKEN_ENDPOINT_AUTH_METHOD`. Không chép secret của Media sang Chat; không cần AWS SDK trong Chat.
+Media tiếp tục dùng confidential client hiện có qua `NITRO_OAUTH_CLIENT_ID`, `NITRO_OAUTH_CLIENT_SECRET`, `client_secret_basic`. Không chép secret của Media sang Chat; không cần AWS SDK trong Chat.
 
 Attachment legacy chưa có Media asset ID không được tự động mở raw URL chưa xác minh; cần ánh xạ/migrate qua Media nếu có dữ liệu cũ. File được complete nhưng chưa gửi thành message cần retention/cleanup phù hợp tại Media/bucket; không có cam kết antivirus hoặc tự động lưu trữ vĩnh viễn.
 
@@ -157,22 +158,22 @@ pnpm exec next build --webpack
 
 Kết quả kiểm chứng ngày 28/10/2026:
 
-| Bộ kiểm tra | Kết quả | Phạm vi bằng chứng |
-| --- | --- | --- |
-| Chat Vitest | **153/153**, 26 file | Domain, hợp đồng HTTP, actor binding, native OAuth verification/JWT, cursor, merge và WebRTC signaling giả lập; gồm test auth đã có. |
-| Chat cloud Vitest | **23/23** | SQL/transaction trên Neon thật: quyền nhiều tài khoản, owner/member lifecycle, concurrent retry/edit, cursor microsecond, tombstone, reaction/read/unread, block, archive, call, Media binding, rate limit, outbox retry và lease fencing. Provider/platform HTTP được mock. |
-| Notify | **51/51** | Hồi quy service hiện có. |
-| Resource | **85/85** | Hồi quy service hiện có. |
-| Discovery | **44/44** | Hồi quy và private Chat search. |
-| Payment | **44/44** | Hồi quy; không thu tiền thật. |
-| Billing | **40/40** | Hồi quy service hiện có. |
-| Media | **80/80** | Hồi quy, Chat delegation, byte signature và xác nhận đường upload Task vẫn giữ hành vi cũ. |
-| Insight | **51/51** | Hồi quy và giới hạn Chat event ingestion. |
-| Task Vitest | **156/156**, 26 file | Kiểm tra hồi quy tích hợp, không sửa source Task. |
-| TypeScript | **Qua** | Chat và cả 7 service; service có kiểm tra thêm cấu hình TypeScript cho test. |
-| ESLint và script | **Qua** | Các file Chat được thêm/sửa: ESLint với `--max-warnings 0`; kiểm tra cú pháp worker, migration và cloud runner. |
-| Production build Chat | **Qua** | Next.js Webpack compile, TypeScript, prerender và build traces. Còn cảnh báo dynamic dependency từ `Ably → got → cacheable-request → keyv`; không sửa dependency hoặc lockfile để che cảnh báo. |
-| Auth được bảo vệ | **20/20 file giữ nguyên SHA-256** | Login/session/proxy/SSO/auth database source trước và sau. Script cloud kiểm tra metadata cột auth giữ nguyên. |
+| Bộ kiểm tra           | Kết quả                           | Phạm vi bằng chứng                                                                                                                                                                                                                                                           |
+| --------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chat Vitest           | **153/153**, 26 file              | Domain, hợp đồng HTTP, actor binding, native OAuth verification/JWT, cursor, merge và WebRTC signaling giả lập; gồm test auth đã có.                                                                                                                                         |
+| Chat cloud Vitest     | **23/23**                         | SQL/transaction trên Neon thật: quyền nhiều tài khoản, owner/member lifecycle, concurrent retry/edit, cursor microsecond, tombstone, reaction/read/unread, block, archive, call, Media binding, rate limit, outbox retry và lease fencing. Provider/platform HTTP được mock. |
+| Notify                | **51/51**                         | Hồi quy service hiện có.                                                                                                                                                                                                                                                     |
+| Resource              | **85/85**                         | Hồi quy service hiện có.                                                                                                                                                                                                                                                     |
+| Discovery             | **44/44**                         | Hồi quy và private Chat search.                                                                                                                                                                                                                                              |
+| Payment               | **44/44**                         | Hồi quy; không thu tiền thật.                                                                                                                                                                                                                                                |
+| Billing               | **40/40**                         | Hồi quy service hiện có.                                                                                                                                                                                                                                                     |
+| Media                 | **80/80**                         | Hồi quy, Chat delegation, byte signature và xác nhận đường upload Task vẫn giữ hành vi cũ.                                                                                                                                                                                   |
+| Insight               | **51/51**                         | Hồi quy và giới hạn Chat event ingestion.                                                                                                                                                                                                                                    |
+| Task Vitest           | **156/156**, 26 file              | Kiểm tra hồi quy tích hợp, không sửa source Task.                                                                                                                                                                                                                            |
+| TypeScript            | **Qua**                           | Chat và cả 7 service; service có kiểm tra thêm cấu hình TypeScript cho test.                                                                                                                                                                                                 |
+| ESLint và script      | **Qua**                           | Các file Chat được thêm/sửa: ESLint với `--max-warnings 0`; kiểm tra cú pháp worker, migration và cloud runner.                                                                                                                                                              |
+| Production build Chat | **Qua**                           | Next.js Webpack compile, TypeScript, prerender và build traces. Còn cảnh báo dynamic dependency từ `Ably → got → cacheable-request → keyv`; không sửa dependency hoặc lockfile để che cảnh báo.                                                                              |
+| Auth được bảo vệ      | **20/20 file giữ nguyên SHA-256** | Login/session/proxy/SSO/auth database source trước và sau. Script cloud kiểm tra metadata cột auth giữ nguyên.                                                                                                                                                               |
 
 HTTP test dùng identity giả lập ở middleware boundary để kiểm tra bảo vệ route; đây không phải bằng chứng đăng nhập OAuth production bằng browser. Test machine OAuth riêng dùng JWT ký thật với verifier native. Không chạy worker gửi thông báo hoặc giao dịch provider thật để lấy kết quả test.
 

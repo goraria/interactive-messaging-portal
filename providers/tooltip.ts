@@ -1,1 +1,1 @@
-export { TooltipProvider } from "@gorth-io/primitive/default/tooltip"
+export { TooltipProvider } from "@gorth-com/primitive/default/tooltip";

@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest"
 import { APIError } from "better-auth"
-import { logAuthFailure } from "@/utils/server/auth-diagnostics"
+import { logAuthFailure } from "@/utils/auth-diagnostics"
 
 afterEach(() => vi.restoreAllMocks())
 it("logs only the stage, safe codes and status; never errors, tokens, headers or SQL", () => {

@@ -1,4 +1,4 @@
-import { userTable } from "./auth"
+import { userTable } from "./auth";
 export {
   userStatus,
   userTable,
@@ -10,9 +10,9 @@ export {
   rateLimitTable,
   revocationTable,
   proofTable,
-} from "./auth"
-import { sql } from "drizzle-orm"
-import { relations } from "drizzle-orm/_relations"
+} from "./auth";
+import { sql } from "drizzle-orm";
+import { relations } from "drizzle-orm/_relations";
 import {
   index,
   jsonb,
@@ -26,39 +26,39 @@ import {
   integer,
   bigserial,
   check,
-} from "drizzle-orm/pg-core"
-export const conversationTypeOptions = ["direct", "group", "channel"] as const
+} from "drizzle-orm/pg-core";
+export const conversationTypeOptions = ["direct", "group", "channel"] as const;
 
 export const conversationMemberRoleOptions = [
   "owner",
   "admin",
   "member",
-] as const
+] as const;
 
-export const messageTypeOptions = ["text", "system", "image", "file"] as const
+export const messageTypeOptions = ["text", "system", "image", "file"] as const;
 
 export const messageDeliveryStatusOptions = [
   "sent",
   "delivered",
   "read",
-] as const
+] as const;
 
 export const conversationTypeEnum = pgEnum(
   "conversation_type_enum",
-  conversationTypeOptions
-)
+  conversationTypeOptions,
+);
 
 export const conversationMemberRoleEnum = pgEnum(
   "conversation_member_role_enum",
-  conversationMemberRoleOptions
-)
+  conversationMemberRoleOptions,
+);
 
-export const messageTypeEnum = pgEnum("message_type_enum", messageTypeOptions)
+export const messageTypeEnum = pgEnum("message_type_enum", messageTypeOptions);
 
 export const messageDeliveryStatusEnum = pgEnum(
   "message_delivery_status_enum",
-  messageDeliveryStatusOptions
-)
+  messageDeliveryStatusOptions,
+);
 
 export const conversationsTable = pgTable(
   "conversation",
@@ -80,8 +80,8 @@ export const conversationsTable = pgTable(
   (table) => [
     uniqueIndex("conversation_slug_key").on(table.slug),
     index("conversation_created_by_id_idx").on(table.createdById),
-  ]
-)
+  ],
+);
 
 export const messagesTable = pgTable(
   "message",
@@ -108,22 +108,22 @@ export const messagesTable = pgTable(
   (table) => [
     index("message_conversation_created_at_idx").on(
       table.conversationId,
-      table.createdAt
+      table.createdAt,
     ),
     index("message_sender_id_idx").on(table.senderId),
     index("message_deleted_at_idx").on(table.deletedAt),
     uniqueIndex("message_client_id_key").on(
       table.conversationId,
       table.senderId,
-      table.clientMessageId
+      table.clientMessageId,
     ),
     index("message_history_cursor_idx").on(
       table.conversationId,
       table.createdAt.desc(),
-      table.id.desc()
+      table.id.desc(),
     ),
-  ]
-)
+  ],
+);
 
 export const conversationMembersTable = pgTable(
   "conversation_member",
@@ -137,7 +137,7 @@ export const conversationMembersTable = pgTable(
     role: conversationMemberRoleEnum("role").notNull().default("member"),
     lastReadMessageId: uuid("last_read_message_id").references(
       () => messagesTable.id,
-      { onDelete: "set null" }
+      { onDelete: "set null" },
     ),
     mutedUntil: timestamp("muted_until", { mode: "date" }),
     joinedAt: timestamp("joined_at", { mode: "date" }).notNull().defaultNow(),
@@ -152,10 +152,10 @@ export const conversationMembersTable = pgTable(
     }),
     index("conversation_member_user_id_idx").on(table.userId),
     index("conversation_member_last_read_message_id_idx").on(
-      table.lastReadMessageId
+      table.lastReadMessageId,
     ),
-  ]
-)
+  ],
+);
 
 export const messageAttachmentsTable = pgTable(
   "message_attachment",
@@ -179,8 +179,8 @@ export const messageAttachmentsTable = pgTable(
     uniqueIndex("message_attachment_asset_key")
       .on(table.mediaAssetId)
       .where(sql`${table.mediaAssetId} IS NOT NULL`),
-  ]
-)
+  ],
+);
 
 export const messageReactionsTable = pgTable(
   "message_reaction",
@@ -199,11 +199,11 @@ export const messageReactionsTable = pgTable(
     uniqueIndex("message_reaction_message_user_emoji_key").on(
       table.messageId,
       table.userId,
-      table.emoji
+      table.emoji,
     ),
     index("message_reaction_user_id_idx").on(table.userId),
-  ]
-)
+  ],
+);
 
 export const messageReceiptsTable = pgTable(
   "message_receipt",
@@ -224,11 +224,11 @@ export const messageReceiptsTable = pgTable(
   (table) => [
     uniqueIndex("message_receipt_message_user_key").on(
       table.messageId,
-      table.userId
+      table.userId,
     ),
     index("message_receipt_user_status_idx").on(table.userId, table.status),
-  ]
-)
+  ],
+);
 
 export const usersRelations = relations(userTable, ({ many }) => ({
   createdConversations: many(conversationsTable),
@@ -236,7 +236,7 @@ export const usersRelations = relations(userTable, ({ many }) => ({
   messages: many(messagesTable),
   reactions: many(messageReactionsTable),
   receipts: many(messageReceiptsTable),
-}))
+}));
 
 export const conversationsRelations = relations(
   conversationsTable,
@@ -247,8 +247,8 @@ export const conversationsRelations = relations(
     }),
     members: many(conversationMembersTable),
     messages: many(messagesTable),
-  })
-)
+  }),
+);
 
 export const messagesRelations = relations(messagesTable, ({ one, many }) => ({
   conversation: one(conversationsTable, {
@@ -262,7 +262,7 @@ export const messagesRelations = relations(messagesTable, ({ one, many }) => ({
   attachments: many(messageAttachmentsTable),
   reactions: many(messageReactionsTable),
   receipts: many(messageReceiptsTable),
-}))
+}));
 
 export const conversationMembersRelations = relations(
   conversationMembersTable,
@@ -275,8 +275,8 @@ export const conversationMembersRelations = relations(
       fields: [conversationMembersTable.userId],
       references: [userTable.id],
     }),
-  })
-)
+  }),
+);
 
 export const messageAttachmentsRelations = relations(
   messageAttachmentsTable,
@@ -285,8 +285,8 @@ export const messageAttachmentsRelations = relations(
       fields: [messageAttachmentsTable.messageId],
       references: [messagesTable.id],
     }),
-  })
-)
+  }),
+);
 
 export const messageReactionsRelations = relations(
   messageReactionsTable,
@@ -299,8 +299,8 @@ export const messageReactionsRelations = relations(
       fields: [messageReactionsTable.userId],
       references: [userTable.id],
     }),
-  })
-)
+  }),
+);
 
 export const messageReceiptsRelations = relations(
   messageReceiptsTable,
@@ -313,16 +313,17 @@ export const messageReceiptsRelations = relations(
       fields: [messageReceiptsTable.userId],
       references: [userTable.id],
     }),
-  })
-)
+  }),
+);
 
-export type UserRow = typeof userTable.$inferSelect
-export type ConversationRow = typeof conversationsTable.$inferSelect
-export type ConversationMemberRow = typeof conversationMembersTable.$inferSelect
-export type MessageRow = typeof messagesTable.$inferSelect
-export type MessageAttachmentRow = typeof messageAttachmentsTable.$inferSelect
-export type MessageReactionRow = typeof messageReactionsTable.$inferSelect
-export type MessageReceiptRow = typeof messageReceiptsTable.$inferSelect
+export type UserRow = typeof userTable.$inferSelect;
+export type ConversationRow = typeof conversationsTable.$inferSelect;
+export type ConversationMemberRow =
+  typeof conversationMembersTable.$inferSelect;
+export type MessageRow = typeof messagesTable.$inferSelect;
+export type MessageAttachmentRow = typeof messageAttachmentsTable.$inferSelect;
+export type MessageReactionRow = typeof messageReactionsTable.$inferSelect;
+export type MessageReceiptRow = typeof messageReceiptsTable.$inferSelect;
 
 export const chatEventsTable = pgTable(
   "chat_event",
@@ -342,8 +343,8 @@ export const chatEventsTable = pgTable(
   (table) => [
     index("chat_event_replay_idx").on(table.conversationId, table.sequence),
     index("chat_event_entity_idx").on(table.entityId, table.sequence.desc()),
-  ]
-)
+  ],
+);
 export const chatDeliveriesTable = pgTable(
   "chat_delivery",
   {
@@ -364,13 +365,13 @@ export const chatDeliveriesTable = pgTable(
     primaryKey({ columns: [table.eventId, table.destination] }),
     check(
       "chat_delivery_destination_check",
-      sql`${table.destination} IN ('realtime','notification','insight','discovery')`
+      sql`${table.destination} IN ('realtime','notification','insight','discovery')`,
     ),
     index("chat_delivery_pending_idx")
       .on(table.availableAt)
       .where(sql`${table.deliveredAt} IS NULL`),
-  ]
-)
+  ],
+);
 export const chatBlocksTable = pgTable(
   "chat_block",
   {
@@ -387,8 +388,8 @@ export const chatBlocksTable = pgTable(
   (table) => [
     primaryKey({ columns: [table.userId, table.targetId] }),
     check("chat_block_check", sql`${table.userId}<>${table.targetId}`),
-  ]
-)
+  ],
+);
 export const chatCallsTable = pgTable(
   "chat_call",
   {
@@ -416,7 +417,7 @@ export const chatCallsTable = pgTable(
   (table) => [
     uniqueIndex("chat_call_caller_id_client_id_key").on(
       table.callerId,
-      table.clientId
+      table.clientId,
     ),
     uniqueIndex("chat_call_live_idx")
       .on(table.conversationId)
@@ -424,10 +425,10 @@ export const chatCallsTable = pgTable(
     check("chat_call_kind_check", sql`${table.kind} IN ('audio','video')`),
     check(
       "chat_call_state_check",
-      sql`${table.state} IN ('ringing','active','ended','rejected','missed')`
+      sql`${table.state} IN ('ringing','active','ended','rejected','missed')`,
     ),
-  ]
-)
+  ],
+);
 export const chatSignalsTable = pgTable(
   "chat_signal",
   {
@@ -449,11 +450,11 @@ export const chatSignalsTable = pgTable(
     uniqueIndex("chat_signal_call_id_sender_id_client_id_key").on(
       table.callId,
       table.senderId,
-      table.clientId
+      table.clientId,
     ),
     check(
       "chat_signal_kind_check",
-      sql`${table.kind} IN ('offer','answer','ice','accept','reject','end')`
+      sql`${table.kind} IN ('offer','answer','ice','accept','reject','end')`,
     ),
-  ]
-)
+  ],
+);

@@ -28,5 +28,5 @@ export default function ChatPrivacy() {
         through the conversation API.
       </p>
     </article>
-  )
+  );
 }

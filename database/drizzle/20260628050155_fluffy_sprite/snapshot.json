@@ -1,8 +1,6 @@
 {
   "id": "2e519e04-a883-46a7-938f-f5a7d68676f4",
-  "prevIds": [
-    "646b453e-c98e-4d87-8f94-bf12162f1084"
-  ],
+  "prevIds": ["646b453e-c98e-4d87-8f94-bf12162f1084"],
   "version": "8",
   "dialect": "postgres",
   "ddl": [
@@ -13,9 +11,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "accounts_pkey",
       "schema": "public",
@@ -242,14 +238,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "accounts_user_id_users_id_fk",
@@ -264,9 +256,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "sessions_pkey",
       "schema": "public",
@@ -421,14 +411,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "sessions_user_id_users_id_fk",
@@ -443,9 +429,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -688,9 +672,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_unique",
       "schema": "public",
@@ -704,9 +686,7 @@
       "entityType": "tables"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "verifications_pkey",
       "schema": "public",
@@ -813,12 +793,7 @@
       "entityType": "indexes"
     },
     {
-      "values": [
-        "google",
-        "github",
-        "facebook",
-        "credentials"
-      ],
+      "values": ["google", "github", "facebook", "credentials"],
       "name": "provider_enum",
       "schema": "public",
       "entityType": "enums"

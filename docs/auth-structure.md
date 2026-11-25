@@ -28,13 +28,13 @@ store or raw access/refresh-token cookie.
   configured resource indicators; `prompt=select_account` on every login.
 - `lib/auth/server/index.ts`: native auth, Drizzle models, local status checks,
   account/session SID binding and isolated host-only cookies.
-- `lib/auth/browser.ts`: official React client; no periodic auth polling.
-- `services/client/auth.ts`: existing UI facade over native SDK calls.
+- `lib/auth/client/index.ts` exports the Better Auth React client without periodic auth polling.
+- `queries/auth.ts`: existing UI facade over native SDK calls.
 - `routes/auth.ts`: forwards original GET/POST requests to `auth.handler`.
   Next Node-runtime route bridges mount the same Hono application.
-- `services/session.ts`: database-authoritative identity, server-only native
+- `models/session.ts`: database-authoritative identity, server-only native
   `getAccessToken`, JWT subject/SID binding, live freshness and logout race fence.
-- `services/revocation.ts`: verified SSO backchannel events invalidate native
+- `models/revocation.ts`: verified SSO backchannel events invalidate native
   sessions and record durable revocation; local sign-out does not write a
   central revocation marker.
 - `lib/auth/dal.ts`: direct server session lookup, React request memoization;

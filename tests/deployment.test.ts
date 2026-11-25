@@ -5,14 +5,12 @@ function configuration() {
   const values: Record<string, string> = {
     NEXT_PUBLIC_APP_URL: "https://chat.vercel.app",
     NEXT_PUBLIC_AUTH_URL: "https://sso.vercel.app",
-    NEXT_PUBLIC_OAUTH_CLIENT_ID: "chat-production",
+    NEXT_OAUTH_CLIENT_ID: "chat-production",
     NEXT_OAUTH_COOKIE_PREFIX: "gorth",
     NEXT_OAUTH_AUDIENCE: "http://localhost:3030",
     NEXT_SESSION_SECRET: "s".repeat(32),
     CRON_SECRET: "c".repeat(32),
-    NEXT_OAUTH_CLIENT_ID: "chat-backend",
     NEXT_OAUTH_CLIENT_SECRET: "fixture-secret",
-    NEXT_OAUTH_TOKEN_ENDPOINT_AUTH_METHOD: "client_secret_basic",
     DATABASE_URL: "postgresql://fixture:fixture@db.example.test/chat",
     AWS_ENDPOINT_URL_S3: "https://storage.example.test",
     AWS_ACCESS_KEY_ID: "fixture-key", AWS_SECRET_ACCESS_KEY: "fixture-secret",
@@ -40,13 +38,13 @@ it.each(["http://localhost:3030", "https://chat.vercel.app/path", "https://secre
 
 it("rejects local clients/upstreams, missing backend/storage credentials and short secrets", () => {
   const result = inspectDeploymentConfiguration({
-    ...configuration(), NEXT_PUBLIC_OAUTH_CLIENT_ID: "chat-local",
+    ...configuration(), NEXT_OAUTH_CLIENT_ID: "chat-local",
     NEXT_OAUTH_MEDIA_AUDIENCE: "http://localhost:5057",
     NEXT_OAUTH_CLIENT_SECRET: "", AWS_SECRET_ACCESS_KEY: "",
     NEXT_SESSION_SECRET: "short-secret", CRON_SECRET: "short-cron",
   })
   expect(result.errors).toEqual(expect.arrayContaining([
-    expect.stringContaining("NEXT_PUBLIC_OAUTH_CLIENT_ID"),
+    expect.stringContaining("NEXT_OAUTH_CLIENT_ID"),
     expect.stringContaining("NEXT_OAUTH_MEDIA_AUDIENCE"),
     expect.stringContaining("NEXT_OAUTH_CLIENT_SECRET"),
     expect.stringContaining("AWS_SECRET_ACCESS_KEY"),

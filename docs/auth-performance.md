@@ -18,7 +18,7 @@ The signed BFF described in the historical bottleneck list below is retired.
 
 Ordinary recent reads use one authoritative SQL snapshot of session, current local user status, and active revocation markers. Every request reads the DB; no process-wide app-session or credential cache is introduced. The encrypted record must match the handle hash, provider binding, SSO subject, relational SID, creation time and expiry.
 
-This read-only path is used only while identity verification is less than 120 seconds old and the access token is outside the shared policy's refresh leeway. Expiring tokens, stale identity and `fresh: true` checks still use `@gorth-io/structure`'s locked session service, durable rotation checkpoints, revision checks and revocation fences. Sensitive cookie-authenticated Hono mutations request fresh identity. API audience/scope/JWT verification and local authorization remain separate and mandatory.
+This read-only path is used only while identity verification is less than 120 seconds old and the access token is outside the shared policy's refresh leeway. Expiring tokens, stale identity and `fresh: true` checks still use `@gorth-com/structure`'s locked session service, durable rotation checkpoints, revision checks and revocation fences. Sensitive cookie-authenticated Hono mutations request fresh identity. API audience/scope/JWT verification and local authorization remain separate and mandatory.
 
 HMAC verification and BFF proof consumption have been removed. DPoP replay storage remains database-backed. Vertical Chat HTTP no longer takes a Next session-RPC hop before Hono; its verified session identity/local projection is reused after JWT/scope verification.
 
@@ -41,7 +41,7 @@ Automated tests assert query counts, fallback policy, replay uniqueness and secu
 
 - [Better Auth 1.7.7 OAuth resource verification](https://github.com/better-auth/better-auth/blob/v1.7.7/docs/content/docs/plugins/oauth-provider.mdx#api-server): verify JWT signature, issuer, audience, expiry and required scopes locally; keep application permissions separate.
 - [Better Auth 1.7.7 session management](https://github.com/better-auth/better-auth/blob/v1.7.7/docs/content/docs/concepts/session-management.mdx): central Better Auth sessions and app-owned OAuth sessions are different stores. This change does not treat SSO cookie caching as authority for the app.
+
 > Historical performance notes. Current auth uses native Better Auth, not the
 > custom session/refresh engine described below. See
 > [auth-structure.md](auth-structure.md) for current behavior and verification.
-

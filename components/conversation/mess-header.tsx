@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { Button } from "@gorth-io/primitive/custom/button"
-import { NavIdentity } from "@gorth-io/primitive/dashboard/nav-user"
-import { Info } from "@gorth-io/primitive/cores/lucide"
-import { ChatCallControls } from "@/components/conversation/call-controls"
-import { cn } from "@gorth-io/primitive/cores/cn"
-import { useLayout } from "@gorth-io/primitive/providers/layout"
-import { useConversation } from "@/hooks/use-conversation"
+import { Button } from "@gorth-com/primitive/custom/button";
+import { NavIdentity } from "@gorth-com/primitive/dashboard/nav-user";
+import { Info } from "@gorth-com/primitive/cores/lucide";
+import { ChatCallControls } from "@/components/conversation/call-controls";
+import { cn } from "@gorth-com/primitive/cores/cn";
+import { useLayout } from "@gorth-com/primitive/providers/layout";
+import { useConversation } from "@/hooks/use-conversation";
 
 interface MessHeaderProps {
-  conversationName: string
-  avatar?: string | null
-  subtitle: string
-  conversationId?: string
-  userId?: string
-  callsEnabled?: boolean
+  conversationName: string;
+  avatar?: string | null;
+  subtitle: string;
+  conversationId?: string;
+  userId?: string;
+  callsEnabled?: boolean;
 }
 
 export function MessHeader({
@@ -25,8 +25,8 @@ export function MessHeader({
   userId,
   callsEnabled = false,
 }: MessHeaderProps) {
-  const { open: infoOpen, toggle: toggleInfoSidebar } = useConversation()
-  const { variant, width } = useLayout()
+  const { open: infoOpen, toggle: toggleInfoSidebar } = useConversation();
+  const { variant, width } = useLayout();
 
   return (
     <header
@@ -35,46 +35,48 @@ export function MessHeader({
         variant === "sidebar" && "border-b shadow-sm",
         variant === "floating" &&
           "rounded-lg shadow-sm ring-1 ring-sidebar-border",
-        variant === "inset" && "border-b"
+        variant === "inset" && "border-b",
       )}
     >
-      <div className={cn(
-        "flex h-full w-full items-center justify-between px-6",
-        width === "narrow" && "container mx-auto"
-      )}>
-      <h1 className="sr-only">{conversationName}</h1>
-      <NavIdentity
-        user={{ name: conversationName, avatar }}
-        description={subtitle}
-        hover
-      />
+      <div
+        className={cn(
+          "flex h-full w-full items-center justify-between px-6",
+          width === "narrow" && "container mx-auto",
+        )}
+      >
+        <h1 className="sr-only">{conversationName}</h1>
+        <NavIdentity
+          user={{ name: conversationName, avatar }}
+          description={subtitle}
+          hover
+        />
 
-      <div className="flex shrink-0 items-center gap-2">
-        {conversationId && userId ? (
-          <ChatCallControls
-            key={conversationId}
-            conversationId={conversationId}
-            userId={userId}
-            enabled={callsEnabled}
-          />
-        ) : null}
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={
-            infoOpen ? "Close conversation info" : "Open conversation info"
-          }
-          title={
-            infoOpen ? "Close conversation info" : "Open conversation info"
-          }
-          aria-pressed={infoOpen}
-          onClick={toggleInfoSidebar}
-        >
-          <Info />
-        </Button>
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          {conversationId && userId ? (
+            <ChatCallControls
+              key={conversationId}
+              conversationId={conversationId}
+              userId={userId}
+              enabled={callsEnabled}
+            />
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={
+              infoOpen ? "Close conversation info" : "Open conversation info"
+            }
+            title={
+              infoOpen ? "Close conversation info" : "Open conversation info"
+            }
+            aria-pressed={infoOpen}
+            onClick={toggleInfoSidebar}
+          >
+            <Info />
+          </Button>
+        </div>
       </div>
     </header>
-  )
+  );
 }
